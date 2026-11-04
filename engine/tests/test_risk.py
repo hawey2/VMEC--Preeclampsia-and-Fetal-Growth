@@ -157,3 +157,13 @@ def test_plgf_mom_uses_sample_gestation(reference_woman):
     earlier = assess(Assessment(84, reference_woman, Biomarkers(plgf_pg_ml=40, plgf_analyser=Analyser.KRYPTOR, plgf_ga_days=78)))
     # PlGF rises with GA, so the same value drawn earlier is a higher MoM
     assert earlier.moms["plgf"] > same_day.moms["plgf"]
+
+
+def test_whole_of_day_97_is_inside_the_window():
+    """13+6 means any time on day 97: CRL 84 mm (97.5 days) is accepted, day 98 (14+0) is not."""
+    from pe_risk import Assessment, Ethnicity, MaternalFactors, assess
+
+    mf = MaternalFactors(age_years=30, weight_kg=60, height_cm=160, ethnicity=Ethnicity.EAST_ASIAN)
+    assert assess(Assessment(ga_days=ga_days_from_crl(84), maternal=mf)).maternal_factors_only
+    with pytest.raises(ValueError):
+        assess(Assessment(ga_days=98.0, maternal=mf))

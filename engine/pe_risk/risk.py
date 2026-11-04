@@ -12,7 +12,7 @@ from .models import Assessment, RiskEstimate, RiskReport
 from .prior import prior_mean_weeks, prior_sd_weeks
 
 DEFAULT_CUTOFFS = (32.0, 37.0)
-WINDOW_DAYS = (77, 97)  # 11+0 to 13+6
+WINDOW_DAYS = (77, 97)  # 11+0 to 13+6: any GA from day 77.0 up to (not including) day 98
 T_GRID = np.arange(0.0, 120.0, 0.01)  # weeks; prior mass outside is negligible
 
 
@@ -80,7 +80,7 @@ def assess(a: Assessment, coef: CoefficientSet | None = None,
     coef = coef or load()
     warnings: list[str] = []
 
-    if not (WINDOW_DAYS[0] <= a.ga_days <= WINDOW_DAYS[1]):
+    if not (WINDOW_DAYS[0] <= a.ga_days < WINDOW_DAYS[1] + 1):
         raise ValueError(
             f"gestational age {a.ga_days} days is outside 11+0 to 13+6 weeks "
             f"({WINDOW_DAYS[0]}-{WINDOW_DAYS[1]} days)"

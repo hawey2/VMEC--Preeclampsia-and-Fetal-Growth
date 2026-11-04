@@ -1,6 +1,12 @@
 import type { AssessmentOut, AuditRow, FormState, OutcomeData, ScreeningFull, ScreeningSummary, User, UserRow } from "./types";
 
-const num = (s: string) => (s.trim() === "" ? null : Number(s));
+import { parseNum } from "./validate";
+
+/** A number from a form field ("2,5" works too); empty or not a number = null (the field shows the error). */
+const num = (s: string) => {
+  const v = parseNum(s);
+  return v === null || Number.isNaN(v) ? null : v;
+};
 
 /** (systolic, diastolic) pairs that are complete. */
 export function bpPairs(f: FormState): [number, number][] {

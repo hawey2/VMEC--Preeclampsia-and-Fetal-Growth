@@ -387,7 +387,7 @@ const estimate = (c: number, p: number): RiskEstimate => ({ cutoff_weeks: c, pro
 
 export function assess(gaDays: number, mf: MaternalFactors, b: Biomarkers, cutoffs = DEFAULT_CUTOFFS): RiskReport {
   const warnings: string[] = [];
-  if (!(gaDays >= WINDOW_DAYS[0] && gaDays <= WINDOW_DAYS[1])) {
+  if (!(gaDays >= WINDOW_DAYS[0] && gaDays < WINDOW_DAYS[1] + 1)) { // 13+6 = any time on day 97
     throw new Error(`gestational age ${pyFloat(gaDays)} days is outside 11+0 to 13+6 weeks (${WINDOW_DAYS[0]}-${WINDOW_DAYS[1]} days)`);
   }
   for (const comp of ["prior", "mom", "likelihood", "truncation"]) {

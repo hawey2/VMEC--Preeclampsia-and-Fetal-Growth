@@ -116,7 +116,7 @@ def compute(a: AssessmentIn) -> AssessmentOut:
     plgf_ga = None
     if b.plgf_sample_date is not None and (b.plgf_pg_ml is not None or b.plgf_mom is not None):
         plgf_ga = ga - (a.exam_date - b.plgf_sample_date).days
-        if not 77 <= plgf_ga <= 97:
+        if not 77 <= plgf_ga < 98:
             raise HTTPException(422, "PlGF sample must be taken at 11+0 to 13+6 weeks")
 
     oa_ratio = _oa_ratio(a)

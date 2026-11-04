@@ -11,7 +11,7 @@
   --low: #146c43;
   --low-bg: #e8f5ee;
   --warn-bg: #fff7e0;
-  --warn-line: #e3c065;
+  --warn-line: #e3c065; --warn-ink: #8a5a00;
   --field-bg: #ffffff;
   color-scheme: light;
 }
@@ -19,7 +19,7 @@
   :root:not([data-theme="light"]) {
     --bg: #12161c; --card: #1b2129; --ink: #e6e9ee; --muted: #9aa5b3; --line: #313a46;
     --accent: #5aa6ef; --accent-ink: #0b1220; --high: #ff8a80; --high-bg: #3a1a18;
-    --low: #7fd3a6; --low-bg: #16301f; --warn-bg: #2e2812; --warn-line: #7a6424; --field-bg: #151a21;
+    --low: #7fd3a6; --low-bg: #16301f; --warn-bg: #2e2812; --warn-line: #7a6424; --warn-ink: #e8c46a; --field-bg: #151a21;
     color-scheme: dark;
   }
 }
@@ -155,7 +155,7 @@ details { margin: 8px 0; font-size: 13.5px; }
 .hint-line { font-size: 13px; color: var(--muted); margin: 4px 0 8px; }
 .bpgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 6px 0 10px; }
 .bpgrid__block { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; min-width: 0; }
-.bpgrid__head { font-weight: 600; font-size: 13px; margin-bottom: 6px; }
+.bpgrid__head { display: grid; grid-template-columns: 56px minmax(0, 1fr) minmax(0, 1fr); gap: 6px; align-items: end; font-weight: 600; font-size: 13px; margin-bottom: 6px; }
 .bpgrid__row { display: grid; grid-template-columns: 56px minmax(0, 1fr) minmax(0, 1fr); gap: 6px; align-items: center; margin-bottom: 4px; }
 .bpgrid__row input { width: 100%; min-width: 0; }
 .bpgrid__row .muted { font-size: 12.5px; }
@@ -238,3 +238,13 @@ a.button.primary { background: var(--accent); color: var(--accent-ink); font-wei
 .inline-form { display: inline-flex; gap: 6px; align-items: center; flex-wrap: wrap; }
 .inline-form input { width: 12em; }
 tr.is-disabled td { color: var(--muted); }
+
+/* Field checks: red = not accepted, amber = unusual but accepted */
+.field__body { display: grid; gap: 4px; min-width: 0; }
+.field__msg { font-size: 12.5px; line-height: 1.35; }
+.field__msg--error { color: var(--high); font-weight: 600; }
+.field__msg--warn { color: var(--warn-ink); }
+.field--warn input, .field--warn select { border-color: var(--warn-line); }
+.field--bad input, .field--bad select, input[aria-invalid="true"], input.cell--error { border-color: var(--high); background: var(--high-bg); box-shadow: 0 0 0 1px var(--high); }
+input.cell--warn { border-color: var(--warn-line); }
+.bp-msgs { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 2px; }

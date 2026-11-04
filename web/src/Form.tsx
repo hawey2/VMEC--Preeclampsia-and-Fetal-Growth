@@ -2,15 +2,22 @@ import type { ReactNode } from "react";
 import { liveMap, liveOa, liveUtpi } from "./api";
 import { analysers, loc, t, type Key, type Lang } from "./i18n";
 import type { AssessmentOut, FormState, YN } from "./types";
+import { dateHints, type Issue, type Issues } from "./validate";
 
-function FieldBox({ label, bad, hint, children }: { label: string; bad: boolean; hint?: string; children: ReactNode }) {
+function FieldBox({ label, bad, hint, issue, children }: {
+  label: string; bad: boolean; hint?: string; issue?: Issue; children: ReactNode;
+}) {
+  const cls = bad || issue?.level === "error" ? " field--bad" : issue ? " field--warn" : "";
   return (
-    <label className={`field${bad ? " field--bad" : ""}`}>
+    <label className={`field${cls}`}>
       <span className="field__label">
         {label}
         {hint && <span className="field__hint"> · {hint}</span>}
       </span>
-      <span className="field__control">{children}</span>
+      <span className="field__body">
+        <span className="field__control">{children}</span>
+        {issue && <span className={`field__msg field__msg--${issue.level}`} role={issue.level === "error" ? "alert" : undefined}>{issue.text}</span>}
+      </span>
     </label>
   );
 }
@@ -21,11 +28,16 @@ type Props = {
   set: (patch: Partial<FormState>) => void;
   missing: string[];
   result: AssessmentOut | null;
+  issues: Issues;
+  /** GA worked out in the browser as the dating fields are typed (before any result). */
+  gaDays: number | null;
 };
 
 const fmt = (x: number | null | undefined, d = 1) => (x === null || x === undefined || Number.isNaN(x) ? "" : x.toFixed(d));
 
-export function AssessmentForm({ lang, f, set, missing, result }: Props) {
+export function AssessmentForm({ lang, f, set, missing, result, issues, gaDays }: Props) {
+  const hints = dateHints(f);
+  const inv = (k: string) => (issues[k]?.level === "error" ? true : undefined);
   const L = (k: Key) => t(lang, k);
   const bad = (k: string) => missing.includes(k);
   const unit = (u: string) => <span className="unit">{u}</span>;
@@ -57,7 +69,10 @@ export function AssessmentForm({ lang, f, set, missing, result }: Props) {
   const bpCell = (i: number, label: string) => (
     <input
       aria-label={label}
+      aria-invalid={inv(`bp${i}`)}
+      className={issues[`bp${i}`] ? `cell--${issues[`bp${i}`]!.level}` : undefined}
       inputMode="numeric"
+     
       value={f.bp[i]}
       onChange={(e) => set({ bp: f.bp.map((v, j) => (j === i ? e.target.value : v)) })}
     />
@@ -65,6 +80,7 @@ export function AssessmentForm({ lang, f, set, missing, result }: Props) {
   const oaCell = (i: number, label: string) => (
     <input
       aria-label={label}
+      aria-invalid={inv(`oa${i}`)}
       inputMode="decimal"
       value={f.oa[i]}
       onChange={(e) => set({ oa: f.oa.map((v, j) => (j === i ? e.target.value : v)) })}
@@ -93,15 +109,15 @@ export function AssessmentForm({ lang, f, set, missing, result }: Props) {
       <div className="two">
         <section className="card">
           <h2>{L("maternal")}</h2>
-          <FieldBox label={L("dob")} bad={bad("dob")}>
+          <FieldBox label={L("dob")} bad={bad("dob")} issue={issues.date_of_birth}>
             <input type="date" value={f.date_of_birth} onChange={(e) => set({ date_of_birth: e.target.value })} />
           </FieldBox>
-          <FieldBox label={L("height")} bad={bad("height")}>
-            <input inputMode="decimal" value={f.height_cm} onChange={(e) => set({ height_cm: e.target.value })} />
+          <FieldBox label={L("height")} hint="120–210 cm" bad={bad("height")} issue={issues.height_cm}>
+            <input inputMode="decimal" aria-invalid={inv("height_cm")} value={f.height_cm} onChange={(e) => set({ height_cm: e.target.value })} />
             {unit("cm")}
           </FieldBox>
-          <FieldBox label={L("weight")} bad={bad("weight")}>
-            <input inputMode="decimal" value={f.weight_kg} onChange={(e) => set({ weight_kg: e.target.value })} />
+          <FieldBox label={L("weight")} hint="30–200 kg" bad={bad("weight")} issue={issues.weight_kg}>
+            <input inputMode="decimal" aria-invalid={inv("weight_kg")} value={f.weight_kg} onChange={(e) => set({ weight_kg: e.target.value })} />
             {unit("kg")}
           </FieldBox>
           <FieldBox label={L("ethnicity")} bad={bad("ethnicity")}>
@@ -129,14 +145,14 @@ export function AssessmentForm({ lang, f, set, missing, result }: Props) {
             <p className="hint-line">{f.dating_method === "crl" ? "GA = 8.052 × √CRL + 23.73 (Robinson 1975)" : "GA = (BPD + 16.338) / 0.4299 (de Paco Matallana 2025)"}</p>
           )}
           {f.dating_method === "lmp" && (
-            <FieldBox label={L("lmp")} bad={false}><input type="date" value={f.lmp} onChange={(e) => set({ lmp: e.target.value })} /></FieldBox>
+            <FieldBox label={L("lmp")} hint={hints.lmp && `${L("acceptedRange")} ${hints.lmp}`} bad={false} issue={issues.lmp}><input type="date" value={f.lmp} onChange={(e) => set({ lmp: e.target.value })} /></FieldBox>
           )}
           {f.dating_method === "edd" && (
-            <FieldBox label={L("edd")} bad={false}><input type="date" value={f.edd} onChange={(e) => set({ edd: e.target.value })} /></FieldBox>
+            <FieldBox label={L("edd")} hint={hints.edd && `${L("acceptedRange")} ${hints.edd}`} bad={false} issue={issues.edd}><input type="date" value={f.edd} onChange={(e) => set({ edd: e.target.value })} /></FieldBox>
           )}
           {f.dating_method === "ivf" && (
             <>
-              <FieldBox label={L("transfer")} bad={false}>
+              <FieldBox label={L("transfer")} hint={hints.transfer_date && `${L("acceptedRange")} ${hints.transfer_date}`} bad={false} issue={issues.transfer_date}>
                 <input type="date" value={f.transfer_date} onChange={(e) => set({ transfer_date: e.target.value })} />
               </FieldBox>
               <FieldBox label={L("embryoAge")} bad={false}>
@@ -149,14 +165,18 @@ export function AssessmentForm({ lang, f, set, missing, result }: Props) {
             </>
           )}
           {f.dating_method === "manual" && (
-            <FieldBox label={L("gaManual")} bad={false}>
-              <input className="short" inputMode="numeric" value={f.weeks} onChange={(e) => set({ weeks: e.target.value })} />
+            <FieldBox label={L("gaManual")} hint="11+0 – 13+6" bad={false} issue={issues.weeks ?? issues.days}>
+              <input className="short" inputMode="numeric" aria-invalid={inv("weeks")} value={f.weeks} onChange={(e) => set({ weeks: e.target.value })} />
               {unit(L("weeks"))}
-              <input className="short" inputMode="numeric" value={f.days} onChange={(e) => set({ days: e.target.value })} />
+              <input className="short" inputMode="numeric" aria-invalid={inv("days")} value={f.days} onChange={(e) => set({ days: e.target.value })} />
               {unit(L("days"))}
             </FieldBox>
           )}
-          {result && <p className="hint-line"><strong>{L("ga")} {result.ga_label}</strong> · EDD {result.edd.split("-").reverse().join("/")}</p>}
+          {result ? (
+            <p className="hint-line"><strong>{L("ga")} {result.ga_label}</strong> · EDD {result.edd.split("-").reverse().join("/")}</p>
+          ) : gaDays != null && gaDays >= 0 && gaDays < 300 ? (
+            <p className="hint-line"><strong>{L("ga")} {Math.floor(Math.floor(gaDays) / 7)}+{Math.floor(gaDays) % 7}</strong></p>
+          ) : null}
           {yesNo("vanishing_twin", "vanishingTwin")}
           <FieldBox label={L("conception")} bad={false}>
             <select value={f.conception} onChange={(e) => set({ conception: e.target.value })}>
@@ -189,11 +209,11 @@ export function AssessmentForm({ lang, f, set, missing, result }: Props) {
           {f.parity === "parous" && (
             <>
               {yesNo("prev_pe", "prevPe")}
-              <FieldBox label={L("prevGa")} hint="24–44" bad={bad("prevGa")}>
-                <input inputMode="decimal" value={f.prev_ga_weeks} onChange={(e) => set({ prev_ga_weeks: e.target.value })} />
+              <FieldBox label={L("prevGa")} hint="24–44" bad={bad("prevGa")} issue={issues.prev_ga_weeks}>
+                <input inputMode="decimal" aria-invalid={inv("prev_ga_weeks")} value={f.prev_ga_weeks} onChange={(e) => set({ prev_ga_weeks: e.target.value })} />
                 {unit(L("weeks"))}
               </FieldBox>
-              <FieldBox label={L("prevDate")} bad={bad("prevDate")}>
+              <FieldBox label={L("prevDate")} bad={bad("prevDate")} issue={issues.prev_delivery_date}>
                 <input type="date" value={f.prev_delivery_date} onChange={(e) => set({ prev_delivery_date: e.target.value })} />
               </FieldBox>
             </>
@@ -206,12 +226,12 @@ export function AssessmentForm({ lang, f, set, missing, result }: Props) {
         <div className="grid">
           {choice("heart", "heart", [["present", "present"], ["absent", "absent"]])}
           <span />
-          <FieldBox label={L("crl")} hint="45–84 mm" bad={bad("crl")}>
-            <input inputMode="decimal" value={f.crl_mm} onChange={(e) => set({ crl_mm: e.target.value })} />
+          <FieldBox label={L("crl")} hint="45–84 mm" bad={bad("crl")} issue={issues.crl_mm}>
+            <input inputMode="decimal" aria-invalid={inv("crl_mm")} value={f.crl_mm} onChange={(e) => set({ crl_mm: e.target.value })} />
             {unit("mm")}
           </FieldBox>
-          <FieldBox label={L("bpd")} bad={bad("bpd")}>
-            <input inputMode="decimal" value={f.bpd_mm} onChange={(e) => set({ bpd_mm: e.target.value })} />
+          <FieldBox label={L("bpd")} hint={f.dating_method === "bpd" ? "16.8–25.7 mm" : "15–28 mm"} bad={bad("bpd")} issue={issues.bpd_mm}>
+            <input inputMode="decimal" aria-invalid={inv("bpd_mm")} value={f.bpd_mm} onChange={(e) => set({ bpd_mm: e.target.value })} />
             {unit("mm")}
             {result?.bpd && <span className="mom-chip">{L("median")}: {result.bpd.median_mm.toFixed(1)} mm</span>}
           </FieldBox>
@@ -243,8 +263,17 @@ export function AssessmentForm({ lang, f, set, missing, result }: Props) {
             </div>
           ))}
         </div>
+        {[0, 1, 2, 3, 4, 5, 6, 7].some((i) => issues[`bp${i}`]) && (
+          <ul className="bp-msgs">
+            {[0, 1, 2, 3, 4, 5, 6, 7].filter((i) => issues[`bp${i}`]).map((i) => (
+              <li key={i} className={`field__msg field__msg--${issues[`bp${i}`]!.level}`}>
+                {L("measurement")} {Math.floor(i / 4) + 1} · {L(i % 4 < 2 ? "right" : "left")} · {i % 2 === 0 ? L("sbp") : L("dbp")}: {issues[`bp${i}`]!.text}
+              </li>
+            ))}
+          </ul>
+        )}
         <div className="grid">
-          <FieldBox label="MAP" bad={false} hint="DBP + (SBP − DBP) / 3">
+          <FieldBox label="MAP" bad={false} hint="DBP + (SBP − DBP) / 3" issue={issues.map_mmhg}>
             <input
               inputMode="decimal"
               value={readingsEntered ? fmt(mapLive) : f.map_mmhg}
@@ -262,11 +291,11 @@ export function AssessmentForm({ lang, f, set, missing, result }: Props) {
         <details className="fold" open>
           <summary><h3 className="sub">{L("utpi")}</h3></summary>
           <div className="grid">
-            <FieldBox label={L("right")} bad={false}>
-              <input inputMode="decimal" value={f.utpi_right} onChange={(e) => set({ utpi_right: e.target.value })} />
+            <FieldBox label={L("right")} hint="0.1–5.9" bad={false} issue={issues.utpi_right}>
+              <input inputMode="decimal" aria-invalid={inv("utpi_right")} value={f.utpi_right} onChange={(e) => set({ utpi_right: e.target.value })} />
             </FieldBox>
-            <FieldBox label={L("left")} bad={false}>
-              <input inputMode="decimal" value={f.utpi_left} onChange={(e) => set({ utpi_left: e.target.value })} />
+            <FieldBox label={L("left")} hint="0.1–5.9" bad={false} issue={issues.utpi_left}>
+              <input inputMode="decimal" aria-invalid={inv("utpi_left")} value={f.utpi_left} onChange={(e) => set({ utpi_left: e.target.value })} />
             </FieldBox>
             <FieldBox label={L("meanUtpi")} bad={false}>
               <input value={fmt(utpiLive, 2)} readOnly aria-readonly="true" />
@@ -283,13 +312,13 @@ export function AssessmentForm({ lang, f, set, missing, result }: Props) {
           <div className="grid">
             <div>
               <p className="muted">{L("oaRight")}</p>
-              <FieldBox label="PSV 1" bad={false}>{oaCell(0, "right PSV 1")}{unit("cm/s")}</FieldBox>
-              <FieldBox label="PSV 2" bad={false}>{oaCell(1, "right PSV 2")}{unit("cm/s")}</FieldBox>
+              <FieldBox label="PSV 1" bad={false} issue={issues.oa0}>{oaCell(0, "right PSV 1")}{unit("cm/s")}</FieldBox>
+              <FieldBox label="PSV 2" bad={false} issue={issues.oa1}>{oaCell(1, "right PSV 2")}{unit("cm/s")}</FieldBox>
             </div>
             <div>
               <p className="muted">{L("oaLeft")}</p>
-              <FieldBox label="PSV 1" bad={false}>{oaCell(2, "left PSV 1")}{unit("cm/s")}</FieldBox>
-              <FieldBox label="PSV 2" bad={false}>{oaCell(3, "left PSV 2")}{unit("cm/s")}</FieldBox>
+              <FieldBox label="PSV 1" bad={false} issue={issues.oa2}>{oaCell(2, "left PSV 1")}{unit("cm/s")}</FieldBox>
+              <FieldBox label="PSV 2" bad={false} issue={issues.oa3}>{oaCell(3, "left PSV 2")}{unit("cm/s")}</FieldBox>
             </div>
           </div>
           <FieldBox label={L("oa")} bad={false} hint={L("oaHint")}>
@@ -301,17 +330,17 @@ export function AssessmentForm({ lang, f, set, missing, result }: Props) {
         <details className="fold" open>
           <summary><h3 className="sub">{L("biochemical")}</h3></summary>
           <div className="grid">
-            <FieldBox label={L("sampleDate")} bad={false}>
+            <FieldBox label={L("sampleDate")} hint={hints.plgf_date && `${L("acceptedRange")} ${hints.plgf_date}`} bad={false} issue={issues.plgf_date}>
               <input type="date" value={f.plgf_date} onChange={(e) => set({ plgf_date: e.target.value })} />
               {result?.plgf_sample_ga_days != null && (
                 <span className="unit">
-                  {Math.floor(result.plgf_sample_ga_days / 7)} {L("weeks")} {Math.round(result.plgf_sample_ga_days) % 7} {L("days")}
+                  {Math.floor(Math.floor(result.plgf_sample_ga_days) / 7)}+{Math.floor(result.plgf_sample_ga_days) % 7} {L("weeks")}
                 </span>
               )}
             </FieldBox>
             <span />
-            <FieldBox label={L("plgf")} bad={false}>
-              <input inputMode="decimal" value={f.plgf_pg_ml} onChange={(e) => set({ plgf_pg_ml: e.target.value })} />
+            <FieldBox label={L("plgf")} hint="1–1999 pg/mL" bad={false} issue={issues.plgf_pg_ml}>
+              <input inputMode="decimal" aria-invalid={inv("plgf_pg_ml")} value={f.plgf_pg_ml} onChange={(e) => set({ plgf_pg_ml: e.target.value })} />
               {unit("pg/mL")}
             </FieldBox>
             <FieldBox label={L("analyser")} bad={false}>
@@ -321,8 +350,8 @@ export function AssessmentForm({ lang, f, set, missing, result }: Props) {
                 ))}
               </select>
             </FieldBox>
-            <FieldBox label={L("momOptional")} bad={false}>
-              <input inputMode="decimal" value={f.plgf_mom} onChange={(e) => set({ plgf_mom: e.target.value })} />
+            <FieldBox label={L("momOptional")} hint="0.05–10" bad={false} issue={issues.plgf_mom}>
+              <input inputMode="decimal" aria-invalid={inv("plgf_mom")} value={f.plgf_mom} onChange={(e) => set({ plgf_mom: e.target.value })} />
               {mom("plgf")}
             </FieldBox>
           </div>

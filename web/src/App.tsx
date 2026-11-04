@@ -12,6 +12,7 @@ import type { AssessmentOut, FormState, ScreeningSummary, User } from "./types";
 import { ChangePassword, Login } from "./Login";
 import { History, RecordBar } from "./Records";
 import { Admin } from "./Admin";
+import { formGaDays, hasErrors, validateForm } from "./validate";
 
 const today = () => {
   const d = new Date();
@@ -75,6 +76,10 @@ export default function App() {
   const [busy, setBusy] = useState(false);
   const resultRef = useRef<HTMLElement>(null);
   const L = (k: Key) => t(lang, k);
+  // Every field is checked as it is typed: red box + the accepted values (validate.ts).
+  const issues = validateForm(f, lang);
+  const invalid = hasErrors(issues);
+  const [liveError, setLiveError] = useState("");
 
   // Sign-in: undefined while checking, null when signed out.
   // The standalone website has no server: no sign-in, nothing saved.
@@ -189,9 +194,11 @@ export default function App() {
     }
     let body: unknown;
     try {
+      if (hasErrors(validateForm(f, lang))) throw new Error("invalid");
       body = buildRequest(f);
     } catch {
       setResult(null);
+      setLiveError("");
       return;
     }
     let live = true;
@@ -203,8 +210,14 @@ export default function App() {
           setSubmitted(f);
           setMissing([]);
           setError("");
+          setLiveError("");
         })
-        .catch(() => live && setResult(null));
+        .catch((e) => {
+          if (!live) return;
+          setResult(null);
+          // Say why instead of silently showing nothing.
+          setLiveError((e as Error).message);
+        });
     }, 450);
     return () => {
       live = false;
@@ -226,6 +239,11 @@ export default function App() {
 
   const calculate = async () => {
     setError("");
+    if (invalid) {
+      setError(L("fixFields"));
+      requestAnimationFrame(() => document.querySelector(".field--bad, [aria-invalid=true]")?.scrollIntoView({ behavior: "smooth", block: "center" }));
+      return;
+    }
     let body: unknown;
     try {
       body = buildRequest(f);
@@ -287,7 +305,7 @@ export default function App() {
         {user?.role === "admin" && !mustChange && !changingPw && <Admin lang={lang} self={user.username} local={user.auth_mode === "local"} />}
         {user && user.role !== "admin" && !mustChange && !changingPw && (
         <>
-        <AssessmentForm lang={lang} f={f} set={set} missing={missing} result={result} />
+        <AssessmentForm lang={lang} f={f} set={set} missing={missing} result={result} issues={issues} gaDays={formGaDays(f)} />
 
         <div className="actions">
           <button type="button" className="primary" onClick={calculate} disabled={busy}>
@@ -297,6 +315,8 @@ export default function App() {
             {L("reset")}
           </button>
           {error && <p className="error" role="alert">{error}</p>}
+          {!error && liveError && <p className="error" role="alert">{L("error")}: {msg(liveError, lang)}</p>}
+          {!error && !liveError && invalid && <p className="error">{L("fixFields")}</p>}
         </div>
 
         {result && (

@@ -132,7 +132,7 @@ export function compute(a: Req): AssessmentOut {
   let plgfGa: number | null = null;
   if (b.plgf_sample_date && (b.plgf_pg_ml != null || b.plgf_mom != null)) {
     plgfGa = ga - daysBetween(b.plgf_sample_date, a.exam_date);
-    if (!(plgfGa >= 77 && plgfGa <= 97)) throw new Error("PlGF sample must be taken at 11+0 to 13+6 weeks");
+    if (!(plgfGa >= 77 && plgfGa < 98)) throw new Error("PlGF sample must be taken at 11+0 to 13+6 weeks");
   }
 
   const oa = oaRatio(a);
