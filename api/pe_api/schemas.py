@@ -19,7 +19,8 @@ class Patient(BaseModel):
 
 class Dating(BaseModel):
     method: DatingMethod
-    crl_mm: float | None = Field(None, ge=45, le=84)
+    crl_mm: float | None = Field(None, gt=0, lt=120)
+    bpd_mm: float | None = Field(None, gt=0, lt=60)
     lmp: date | None = None
     edd: date | None = None
     transfer_date: date | None = None
@@ -31,13 +32,14 @@ class Dating(BaseModel):
     def _needs_fields(self):
         need = {
             DatingMethod.CRL: ["crl_mm"],
+            DatingMethod.BPD: ["bpd_mm"],
             DatingMethod.LMP: ["lmp"],
             DatingMethod.EDD: ["edd"],
             DatingMethod.IVF: ["transfer_date", "embryo_age_days"],
             DatingMethod.MANUAL: ["weeks", "days"],
         }.get(self.method)
         if need is None:
-            raise ValueError(f"dating by {self.method.value.upper()} is not available yet; use CRL")
+            raise ValueError(f"dating by {self.method.value.upper()} is not available yet; use CRL or BPD")
         missing = [f for f in need if getattr(self, f) is None]
         if missing:
             raise ValueError(f"dating by {self.method.value} needs: {', '.join(missing)}")
@@ -48,6 +50,15 @@ class Previous(BaseModel):
     had_pe: bool
     ga_at_delivery_weeks: float = Field(ge=24, le=44)
     delivery_date: date
+
+
+class OaPsv(BaseModel):
+    """Ophthalmic artery peak systolic velocities (cm/s), first and second peak."""
+
+    right_psv1: float | None = Field(None, gt=0)
+    right_psv2: float | None = Field(None, gt=0)
+    left_psv1: float | None = Field(None, gt=0)
+    left_psv2: float | None = Field(None, gt=0)
 
 
 class BiomarkerIn(BaseModel):
@@ -62,6 +73,10 @@ class BiomarkerIn(BaseModel):
     plgf_pg_ml: float | None = Field(None, gt=0, lt=2000)
     plgf_analyser: Analyser | None = None
     plgf_mom: float | None = Field(None, gt=0)
+    plgf_sample_date: date | None = None
+    map_operator: str = ""
+    utpi_operator: str = ""
+    oa_psv: OaPsv | None = None
 
 
 class AssessmentIn(BaseModel):
@@ -73,6 +88,7 @@ class AssessmentIn(BaseModel):
     ethnicity: Ethnicity
     smoker: bool = False
     dating: Dating
+    fetal_heart_activity: bool = True
     conception: Conception = Conception.SPONTANEOUS
     vanishing_twin: bool = False
     chronic_hypertension: bool = False
@@ -101,6 +117,23 @@ class ScreenResult(BaseModel):
     high_risk: bool
 
 
+class PriorTerm(BaseModel):
+    name: str
+    weeks: float
+
+
+class Combination(BaseModel):
+    markers: list[str]
+    risk37: Risk | None
+    risk32: Risk | None
+
+
+class Bpd(BaseModel):
+    measured_mm: float
+    median_mm: float
+    ga_days_from_bpd: float
+
+
 class AssessmentOut(BaseModel):
     patient: Patient
     exam_date: date
@@ -123,3 +156,14 @@ class AssessmentOut(BaseModel):
     model_checksum: str
     warnings: list[str]
     generated_at: str
+    prior_terms: list[PriorTerm]
+    prior_mean_weeks: float
+    prior_sd_weeks: float
+    expected_medians: dict[str, float]
+    curves: dict[str, list[tuple[float, float]]]
+    plgf_sample_ga_days: float | None
+    bpd: Bpd | None
+    oa_psv_ratio: float | None
+    map_operator: str
+    utpi_operator: str
+    combinations: list[Combination]

@@ -86,6 +86,36 @@ export function MomTable({ r, lang }: { r: AssessmentOut; lang: Lang }) {
   );
 }
 
+export function RiskInterp(r: AssessmentOut, lang: Lang) {
+  const used = r.combined ? r.markers_used.map((m) => markerName[m]).join(", ") : "";
+  return (r.screen.high_risk ? t(lang, "interpHigh") : t(lang, "interpLow")).replace("{markers}", used ? `, ${used}` : "");
+}
+
+/** FMF-style result lines: history alone, each marker, then all markers together. */
+export function RiskLines({ r, lang }: { r: AssessmentOut; lang: Lang }) {
+  const L = (k: Key) => t(lang, k);
+  const label = (ms: string[]) => [L("histLine"), ...ms.map((m) => markerName[m])].join(", ");
+  const interp = RiskInterp(r, lang);
+  return (
+    <div className="risklines">
+      <h3>{L("riskBefore37")}</h3>
+      <table>
+        <tbody>
+          {r.combinations.map((c) => (
+            <tr key={c.markers.join("+") || "history"}>
+              <td>{label(c.markers)}</td>
+              <td className="num">
+                {c.risk37 ? oneIn(c.risk37) : <span className="muted small">{L("pendingParams")}</span>}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p className="interp">{interp}</p>
+    </div>
+  );
+}
+
 const both = (k: Key) => (
   <>
     {t("vi", k)} <span className="en">/ {t("en", k)}</span>
@@ -135,6 +165,12 @@ export function PrintReport({ r, facts }: { r: AssessmentOut; facts: Facts }) {
           <h2>{both("moms")}</h2>
           <MomTable r={r} lang="vi" />
           {!Object.keys(r.moms).length && <p className="muted">—</p>}
+          <ul className="pr__extra">
+            {r.bpd && <li>BPD {r.bpd.measured_mm} mm ({t("vi", "median")}: {r.bpd.median_mm.toFixed(1)} mm)</li>}
+            {r.oa_psv_ratio !== null && <li>{t("vi", "oa")}: {r.oa_psv_ratio.toFixed(2)}</li>}
+            {r.map_operator && <li>MAP · {t("vi", "operator")}: {r.map_operator}</li>}
+            {r.utpi_operator && <li>UtA-PI · {t("vi", "operator")}: {r.utpi_operator}</li>}
+          </ul>
         </section>
       </div>
 
@@ -142,6 +178,7 @@ export function PrintReport({ r, facts }: { r: AssessmentOut; facts: Facts }) {
         <h2>{both("results")}</h2>
         <RiskTable r={r} lang="vi" />
         <ScreenBadge r={r} lang="vi" />
+        <p className="pr__interp">{RiskInterp(r, "vi")}<br /><span className="en">{RiskInterp(r, "en")}</span></p>
         <p className="pr__action">
           <strong>{both("action")}:</strong> {r.screen.high_risk ? t("vi", "actionHigh") : t("vi", "actionLow")}
           <br />

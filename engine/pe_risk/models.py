@@ -76,6 +76,8 @@ class Biomarkers:
     plgf_pg_ml: float | None = None
     plgf_analyser: Analyser | None = None
     plgf_mom: float | None = None
+    plgf_ga_days: float | None = None
+    """GA when the blood was taken, if not on the examination day."""
 
 
 @dataclass(frozen=True)

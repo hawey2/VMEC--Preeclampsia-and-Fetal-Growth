@@ -72,3 +72,12 @@ def test_very_short_interval_is_floored_with_warning(coef, reference_woman):
     floored = replace(reference_woman, previous=PreviousPregnancy(False, 39, 0.25))
     assert prior_mean_weeks(short, coef, w) == pytest.approx(prior_mean_weeks(floored, coef))
     assert w and "0.25" in w[0]
+
+
+def test_prior_terms_sum_to_mean_and_name_each_factor(coef, reference_woman):
+    from pe_risk.prior import prior_terms
+    mf = replace(reference_woman, age_years=40, weight_kg=80, chronic_hypertension=False,
+                 family_history_pe=True)
+    terms = dict(prior_terms(mf, coef))
+    assert set(terms) == {"intercept", "age_over_35", "weight", "family_history_pe"}
+    assert sum(terms.values()) == pytest.approx(prior_mean_weeks(mf, coef))

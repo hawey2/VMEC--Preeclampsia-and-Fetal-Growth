@@ -74,7 +74,7 @@ def test_dating_methods(dating, label):
 
 
 @pytest.mark.parametrize("change, fragment", [
-    ({"dating": {"method": "bpd"}}, "not available yet"),
+    ({"dating": {"method": "hc"}}, "not available yet"),
     ({"dating": {"method": "lmp"}}, "needs: lmp"),
     ({"dating": {"method": "manual", "weeks": 20, "days": 0}}, "outside 11+0 to 13+6"),
     ({"date_of_birth": "2030-01-01"}, "date of birth"),
@@ -89,3 +89,30 @@ def test_validation_errors(change, fragment):
 def test_vanishing_twin_warns():
     out = post({**BASE, "vanishing_twin": True}).json()
     assert any("Vanishing twin" in w for w in out["warnings"])
+
+
+def test_extra_outputs_for_charts_and_formulas():
+    body = copy.deepcopy(BASE)
+    body["dating"]["bpd_mm"] = 21.5
+    body["biomarkers"]["plgf_sample_date"] = "2026-11-01"
+    body["biomarkers"]["oa_psv"] = {"right_psv1": 40, "right_psv2": 28, "left_psv1": 42, "left_psv2": 30}
+    body["biomarkers"]["map_operator"] = "MW Lan"
+    out = post(body).json()
+    terms = {t["name"]: t["weeks"] for t in out["prior_terms"]}
+    assert sum(terms.values()) == pytest.approx(out["prior_mean_weeks"], abs=1e-3)
+    assert out["prior_sd_weeks"] == 6.8833
+    assert set(out["curves"]) == {"map", "utpi", "plgf"} and len(out["curves"]["utpi"]) == 22
+    assert out["plgf_sample_ga_days"] == pytest.approx(out["ga_days"] - 3)
+    assert out["bpd"]["median_mm"] == pytest.approx(0.4299 * out["ga_days"] - 16.33798, abs=0.01)
+    assert out["oa_psv_ratio"] == pytest.approx((28 / 40 + 30 / 42) / 2, abs=1e-3)
+    assert any("Ophthalmic" in w for w in out["warnings"])
+    assert out["map_operator"] == "MW Lan"
+    # history line + one line per marker + all markers together
+    assert [c["markers"] for c in out["combinations"]] == [[], ["map"], ["utpi"], ["plgf"], ["map", "utpi", "plgf"]]
+    assert out["combinations"][1]["risk37"] is None  # likelihood not loaded
+
+
+def test_bpd_dating_and_absent_heart():
+    assert post({**BASE, "dating": {"method": "bpd", "bpd_mm": 23}}).json()["ga_label"] == "13+0"
+    r = post({**BASE, "fetal_heart_activity": False})
+    assert r.status_code == 422 and "heart" in r.text

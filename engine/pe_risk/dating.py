@@ -1,8 +1,8 @@
 """Gestational age at the examination from the chosen dating method.
 
-Implemented: CRL (Robinson & Fleming 1975), LMP, EDD, IVF transfer date and
-manual entry. BPD and HC dating are not implemented: at 11-13 weeks the FMF
-protocol dates by CRL, and the published BPD/HC charts still need choosing.
+Implemented: CRL (Robinson & Fleming 1975), BPD (de Paco Matallana 2025),
+LMP, EDD, IVF transfer date and manual entry. HC dating is not implemented:
+no published first-trimester HC dating formula has been chosen yet.
 """
 
 from __future__ import annotations
@@ -28,6 +28,19 @@ def ga_days_from_crl(crl_mm: float) -> float:
     if not 45 <= crl_mm <= 84:
         raise ValueError(f"CRL {crl_mm} mm is outside 45-84 mm (11+0 to 13+6 weeks)")
     return 8.052 * math.sqrt(crl_mm) + 23.73
+
+
+def ga_days_from_bpd(bpd_mm: float) -> float:
+    """de Paco Matallana C et al. UOG 2025;65:560-566 (doi:10.1002/uog.29216):
+    GA (days) = (BPD mm + 16.33798) / 0.4299, derived at 11+0 to 13+6 weeks."""
+    if not 15 <= bpd_mm <= 28:
+        raise ValueError(f"BPD {bpd_mm} mm is outside 15-28 mm (about 11-13 weeks)")
+    return (bpd_mm + 16.33798) / 0.4299
+
+
+def bpd_median_mm(ga_days: float) -> float:
+    """The same regression read the other way: expected BPD for a given GA."""
+    return 0.4299 * ga_days - 16.33798
 
 
 def ga_days_from_lmp(lmp: date, exam: date) -> float:

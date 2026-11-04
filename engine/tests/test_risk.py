@@ -123,3 +123,10 @@ def test_report_carries_model_identity(reference_woman, coef):
     assert r.model_label == "fmf-11-13-v1"
     assert r.model_checksum == coef.checksum and len(r.model_checksum) == 64
     assert T_GRID[0] == 0.0
+
+
+def test_plgf_mom_uses_sample_gestation(reference_woman):
+    same_day = assess(Assessment(84, reference_woman, Biomarkers(plgf_pg_ml=40, plgf_analyser=Analyser.KRYPTOR)))
+    earlier = assess(Assessment(84, reference_woman, Biomarkers(plgf_pg_ml=40, plgf_analyser=Analyser.KRYPTOR, plgf_ga_days=78)))
+    # PlGF rises with GA, so the same value drawn earlier is a higher MoM
+    assert earlier.moms["plgf"] > same_day.moms["plgf"]

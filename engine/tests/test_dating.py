@@ -27,3 +27,11 @@ def test_ivf_day5_transfer():
 def test_manual_days_range():
     with pytest.raises(ValueError):
         dating.ga_days_manual(12, 7)
+
+
+def test_bpd_dating_round_trip():
+    # de Paco Matallana 2025: BPD 23 mm -> 91.5 days (13+0)
+    assert dating.ga_days_from_bpd(23) == pytest.approx(91.51, abs=0.01)
+    assert dating.bpd_median_mm(dating.ga_days_from_bpd(20)) == pytest.approx(20)
+    with pytest.raises(ValueError):
+        dating.ga_days_from_bpd(40)

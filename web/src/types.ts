@@ -22,9 +22,21 @@ export type AssessmentOut = {
   model_checksum: string;
   warnings: string[];
   generated_at: string;
+  prior_terms: { name: string; weeks: number }[];
+  prior_mean_weeks: number;
+  prior_sd_weeks: number;
+  expected_medians: Record<string, number>;
+  curves: Record<string, [number, number][]>;
+  plgf_sample_ga_days: number | null;
+  bpd: { measured_mm: number; median_mm: number; ga_days_from_bpd: number } | null;
+  oa_psv_ratio: number | null;
+  map_operator: string;
+  utpi_operator: string;
+  combinations: { markers: string[]; risk37: Risk | null; risk32: Risk | null }[];
 };
 
 /** Everything the form holds, as strings straight from the inputs. */
+export type YN = "" | "yes" | "no";
 export type FormState = {
   name: string;
   pid: string;
@@ -33,34 +45,38 @@ export type FormState = {
   height_cm: string;
   weight_kg: string;
   ethnicity: string;
-  smoker: "" | "yes" | "no";
+  smoker: YN;
   dating_method: string;
-  crl_mm: string;
   lmp: string;
   edd: string;
   transfer_date: string;
   embryo_age_days: string;
   weeks: string;
   days: string;
-  vanishing_twin: "" | "yes" | "no";
+  vanishing_twin: YN;
   conception: string;
+  htn: YN;
+  dm1: YN;
+  dm2: YN;
+  dm2_insulin: YN;
+  fam_pe: YN;
+  sle: YN;
+  aps: YN;
   parity: "" | "nulliparous" | "parous";
-  prev_pe: "" | "yes" | "no";
+  prev_pe: YN;
   prev_ga_weeks: string;
   prev_delivery_date: string;
-  chronic_hypertension: boolean;
-  diabetes: string;
-  sle_or_aps: boolean;
-  family_history_pe: boolean;
-  map_mode: "readings" | "value" | "mom";
-  bp: string[]; // 8 values: sys/dia x 4 readings
+  heart: "" | "present" | "absent";
+  crl_mm: string;
+  bpd_mm: string;
+  bp: string[]; // 8 values: [M1 right sys, dia, M1 left sys, dia, M2 right sys, dia, M2 left sys, dia]
   map_mmhg: string;
-  map_mom: string;
-  utpi_mode: "raw" | "mom";
-  utpi_left: string;
+  map_operator: string;
   utpi_right: string;
-  utpi_mom: string;
-  plgf_mode: "raw" | "mom";
+  utpi_left: string;
+  utpi_operator: string;
+  oa: string[]; // [right psv1, right psv2, left psv1, left psv2]
+  plgf_date: string;
   plgf_pg_ml: string;
   plgf_analyser: string;
   plgf_mom: string;

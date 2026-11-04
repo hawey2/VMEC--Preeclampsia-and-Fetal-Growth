@@ -63,7 +63,8 @@ def _collect_moms(a: Assessment, coef: CoefficientSet, warnings: list[str]) -> d
         if b.plgf_analyser is None:
             warnings.append("PlGF analyser not given; PlGF not used.")
         else:
-            moms["plgf"] = mom.plgf_mom(b.plgf_pg_ml, ga, mf, b.plgf_analyser, coef)
+            sample_ga = b.plgf_ga_days if b.plgf_ga_days is not None else ga
+            moms["plgf"] = mom.plgf_mom(b.plgf_pg_ml, sample_ga, mf, b.plgf_analyser, coef)
 
     trunc = coef.data.get("truncation", {})
     for k, v in list(moms.items()):

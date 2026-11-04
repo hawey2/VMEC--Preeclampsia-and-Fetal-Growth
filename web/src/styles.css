@@ -144,3 +144,50 @@ details { margin: 8px 0; font-size: 13.5px; }
   .pr__foot p { margin: 2px 0; }
   .pr__model { font-family: ui-monospace, Menlo, Consolas, monospace; }
 }
+
+/* ---------- FMF-style form details ---------- */
+.mom-chip { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px; background: var(--chip-bg, rgba(37, 99, 235, 0.1)); color: var(--accent, #2563eb); font-size: 12.5px; font-weight: 600; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.hint-line { font-size: 13px; color: var(--muted); margin: 4px 0 8px; }
+.bpgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 6px 0 10px; }
+.bpgrid__block { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; min-width: 0; }
+.bpgrid__head { font-weight: 600; font-size: 13px; margin-bottom: 6px; }
+.bpgrid__row { display: grid; grid-template-columns: 56px minmax(0, 1fr) minmax(0, 1fr); gap: 6px; align-items: center; margin-bottom: 4px; }
+.bpgrid__row input { width: 100%; min-width: 0; }
+.bpgrid__row .muted { font-size: 12.5px; }
+@media (max-width: 600px) { .bpgrid { grid-template-columns: 1fr; } }
+.fold { border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; margin: 10px 0; font-size: inherit; }
+.fold > summary { cursor: pointer; font-weight: 600; padding: 2px 0; }
+.fold[open] > summary { margin-bottom: 8px; }
+.sub { font-size: 14px; margin: 12px 0 6px; }
+
+/* ---------- results lines, charts, formulas ---------- */
+.risklines h3 { font-size: 15px; margin: 12px 0 4px; }
+.risklines table { margin: 0 0 6px; }
+.interp { background: var(--warn-bg); border-left: 3px solid var(--warn-line); padding: 8px 12px; font-size: 14px; line-height: 1.5; }
+.charts { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: 16px; }
+.chart { margin: 0; min-width: 0; }
+.chart figcaption { font-size: 14px; margin-bottom: 4px; }
+.chart svg { width: 100%; height: auto; display: block; }
+.chart__grid line { stroke: var(--line); stroke-width: 1; }
+.chart__grid text, .chart__label { fill: var(--muted); font-size: 11px; }
+.chart__median { fill: none; stroke: var(--accent, #2563eb); stroke-width: 2; }
+.chart__point { fill: var(--high, #b91c1c); stroke: var(--bg, #fff); stroke-width: 1.5; }
+.chart__shade { fill: var(--high, #b91c1c); opacity: 0.22; }
+.chart__cut { stroke: var(--muted); stroke-dasharray: 4 3; }
+.chart__mu { stroke: var(--muted); stroke-width: 1; }
+.chart__legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12.5px; color: var(--muted); }
+.sw { display: inline-block; width: 14px; height: 10px; vertical-align: middle; margin-right: 4px; border-radius: 2px; }
+.sw--median { height: 2px; background: var(--accent, #2563eb); }
+.sw--point { width: 10px; border-radius: 50%; background: var(--high, #b91c1c); }
+.sw--shade { background: var(--high, #b91c1c); opacity: 0.3; }
+.how > summary { cursor: pointer; list-style: none; }
+.how > summary::-webkit-details-marker { display: none; }
+.how > summary h2 { display: inline; }
+.how > summary::before { content: "▸ "; color: var(--muted); }
+.how[open] > summary::before { content: "▾ "; }
+.how h3 { font-size: 14.5px; margin: 14px 0 4px; }
+.how ul { padding-left: 18px; }
+.how li { margin: 3px 0; }
+.formula { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 13px; background: var(--chip-bg, rgba(127, 127, 127, 0.08)); padding: 6px 10px; border-radius: 6px; overflow-wrap: anywhere; margin: 4px 0; }
+.pr__extra { list-style: none; padding: 0; margin: 2px 0; font-size: 9pt; }
+.pr__interp { font-size: 9pt; margin: 4px 0; }

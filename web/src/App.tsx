@@ -1,8 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { assess, buildRequest } from "./api";
 import { AssessmentForm } from "./Form";
-import { conceptions, diabetesTypes, ethnicities, t, type Key, type Lang } from "./i18n";
-import { MomTable, PrintReport, RiskTable, ScreenBadge } from "./Report";
+import { conceptions, ethnicities, t, type Key, type Lang } from "./i18n";
+import { MomTable, PrintReport, RiskLines, RiskTable, ScreenBadge } from "./Report";
+import { Charts } from "./Charts";
+import { HowItWorks } from "./How";
+import { Info } from "./Info";
 import type { AssessmentOut, FormState } from "./types";
 
 const today = () => {
@@ -13,13 +16,14 @@ const today = () => {
 
 const EMPTY: FormState = {
   name: "", pid: "", exam_date: today(), date_of_birth: "", height_cm: "", weight_kg: "",
-  ethnicity: "east_asian", smoker: "", dating_method: "crl", crl_mm: "", lmp: "", edd: "",
+  ethnicity: "east_asian", smoker: "", dating_method: "crl", lmp: "", edd: "",
   transfer_date: "", embryo_age_days: "5", weeks: "", days: "", vanishing_twin: "no",
-  conception: "spontaneous", parity: "", prev_pe: "", prev_ga_weeks: "", prev_delivery_date: "",
-  chronic_hypertension: false, diabetes: "none", sle_or_aps: false, family_history_pe: false,
-  map_mode: "readings", bp: Array(8).fill(""), map_mmhg: "", map_mom: "",
-  utpi_mode: "raw", utpi_left: "", utpi_right: "", utpi_mom: "",
-  plgf_mode: "raw", plgf_pg_ml: "", plgf_analyser: "cobas_e411", plgf_mom: "",
+  conception: "spontaneous", htn: "", dm1: "", dm2: "", dm2_insulin: "", fam_pe: "", sle: "", aps: "",
+  parity: "", prev_pe: "", prev_ga_weeks: "", prev_delivery_date: "",
+  heart: "present", crl_mm: "", bpd_mm: "",
+  bp: Array(8).fill(""), map_mmhg: "", map_operator: "",
+  utpi_right: "", utpi_left: "", utpi_operator: "", oa: Array(4).fill(""),
+  plgf_date: "", plgf_pg_ml: "", plgf_analyser: "cobas_e411", plgf_mom: "",
 };
 
 const pick = (list: [string, string, string][], v: string) => list.find((x) => x[0] === v)?.[1] ?? v;
@@ -39,10 +43,12 @@ function facts(f: FormState): { label: Key; value: string }[] {
     out.push({ label: "prevGa", value: `${f.prev_ga_weeks} tuần` });
   }
   out.push(
-    { label: "chronicHtn", value: yn(f.chronic_hypertension) },
-    { label: "diabetes", value: pick(diabetesTypes, f.diabetes) },
-    { label: "sle", value: yn(f.sle_or_aps) },
-    { label: "famPe", value: yn(f.family_history_pe) },
+    { label: "chronicHtn", value: yn(f.htn === "yes") },
+    { label: "dm1", value: yn(f.dm1 === "yes") },
+    { label: "dm2", value: f.dm2 === "yes" ? (f.dm2_insulin === "yes" ? "Có (insulin)" : "Có") : "Không" },
+    { label: "sleOnly", value: yn(f.sle === "yes") },
+    { label: "apsOnly", value: yn(f.aps === "yes") },
+    { label: "famPe", value: yn(f.fam_pe === "yes") },
   );
   return out;
 }
@@ -73,10 +79,39 @@ export default function App() {
     document.documentElement.lang = lang;
   }, [lang]);
 
-  const set = (patch: Partial<FormState>) => {
-    setF((prev) => ({ ...prev, ...patch }));
-    setResult(null);
-  };
+  const set = (patch: Partial<FormState>) => setF((prev) => ({ ...prev, ...patch }));
+
+  // Recalculate quietly as the form is filled in, like the FMF calculator, once it is complete.
+  const firstRun = useRef(true);
+  useEffect(() => {
+    if (firstRun.current) {
+      firstRun.current = false;
+      return;
+    }
+    let body: unknown;
+    try {
+      body = buildRequest(f);
+    } catch {
+      setResult(null);
+      return;
+    }
+    let live = true;
+    const id = window.setTimeout(() => {
+      assess(body)
+        .then((r) => {
+          if (!live) return;
+          setResult(r);
+          setSubmitted(f);
+          setMissing([]);
+          setError("");
+        })
+        .catch(() => live && setResult(null));
+    }, 450);
+    return () => {
+      live = false;
+      window.clearTimeout(id);
+    };
+  }, [f]);
 
   const calculate = async () => {
     setError("");
@@ -118,7 +153,7 @@ export default function App() {
 
         <div className="banner" role="note">{L("notClinical")}</div>
 
-        <AssessmentForm lang={lang} f={f} set={set} missing={missing} />
+        <AssessmentForm lang={lang} f={f} set={set} missing={missing} result={result} />
 
         <div className="actions">
           <button type="button" className="primary" onClick={calculate} disabled={busy}>
@@ -140,6 +175,7 @@ export default function App() {
               {L("ga")} {result.ga_label} ({L("dating")} {result.dating_method.toUpperCase()}) · {L("age")} {result.age_years.toFixed(1)} {L("years")}
             </p>
             <ScreenBadge r={result} lang={lang} />
+            <RiskLines r={result} lang={lang} />
             <RiskTable r={result} lang={lang} />
             {!result.combined && Object.keys(result.moms).length > 0 && <p className="note">{L("combinedMissing")}</p>}
             <MomTable r={result} lang={lang} />
@@ -155,6 +191,9 @@ export default function App() {
             <p className="muted small">{L("disclaimer")}</p>
           </section>
         )}
+        {result && submitted && <Charts r={result} lang={lang} />}
+        {result && submitted && <HowItWorks r={result} f={submitted} lang={lang} />}
+        <Info lang={lang} />
       </div>
       {result && submitted && <PrintReport r={result} facts={facts(submitted)} />}
     </>

@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
-import { analysers, conceptions, datingMethods, diabetesTypes, ethnicities, t, type Key, type Lang } from "./i18n";
-import type { FormState } from "./types";
+import { liveMap, liveOa, liveUtpi } from "./api";
+import { analysers, conceptions, datingMethods, ethnicities, t, type Key, type Lang } from "./i18n";
+import type { AssessmentOut, FormState, YN } from "./types";
 
 function FieldBox({ label, bad, hint, children }: { label: string; bad: boolean; hint?: string; children: ReactNode }) {
   return (
@@ -19,59 +20,71 @@ type Props = {
   f: FormState;
   set: (patch: Partial<FormState>) => void;
   missing: string[];
+  result: AssessmentOut | null;
 };
 
-export function AssessmentForm({ lang, f, set, missing }: Props) {
+const fmt = (x: number | null | undefined, d = 1) => (x === null || x === undefined || Number.isNaN(x) ? "" : x.toFixed(d));
+
+export function AssessmentForm({ lang, f, set, missing, result }: Props) {
   const L = (k: Key) => t(lang, k);
   const bad = (k: string) => missing.includes(k);
-
   const unit = (u: string) => <span className="unit">{u}</span>;
+  const mom = (m: string) =>
+    result?.moms[m] !== undefined ? <span className="mom-chip">{result.moms[m].toFixed(2)} MoM</span> : null;
 
-  const yesNo = (name: keyof FormState, k: Key) => (
+  const choice = <V extends string>(name: keyof FormState, k: Key, options: [V, Key][]) => (
     <div className={`field${bad(k) ? " field--bad" : ""}`} role="radiogroup" aria-label={L(k)}>
       <span className="field__label">{L(k)}</span>
-      <span className="field__control seg">
-        {(["yes", "no"] as const).map((v) => (
-          <button
-            type="button"
-            key={v}
-            className={f[name] === v ? "seg__on" : ""}
-            aria-pressed={f[name] === v}
-            onClick={() => set({ [name]: v } as Partial<FormState>)}
-          >
-            {L(v)}
-          </button>
-        ))}
+      <span className="field__control">
+        <span className="seg">
+          {options.map(([v, label]) => (
+            <button
+              type="button"
+              key={v}
+              className={f[name] === v ? "seg__on" : ""}
+              aria-pressed={f[name] === v}
+              onClick={() => set({ [name]: v } as Partial<FormState>)}
+            >
+              {L(label)}
+            </button>
+          ))}
+        </span>
       </span>
     </div>
   );
+  const yesNo = (name: keyof FormState, k: Key) => choice<Exclude<YN, "">>(name, k, [["yes", "yes"], ["no", "no"]]);
 
-  const check = (name: "chronic_hypertension" | "sle_or_aps" | "family_history_pe", k: Key) => (
-    <label className="check">
-      <input type="checkbox" checked={f[name]} onChange={(e) => set({ [name]: e.target.checked })} />
-      <span>{L(k)}</span>
-    </label>
+  const bpCell = (i: number, label: string) => (
+    <input
+      aria-label={label}
+      inputMode="numeric"
+      value={f.bp[i]}
+      onChange={(e) => set({ bp: f.bp.map((v, j) => (j === i ? e.target.value : v)) })}
+    />
+  );
+  const oaCell = (i: number, label: string) => (
+    <input
+      aria-label={label}
+      inputMode="decimal"
+      value={f.oa[i]}
+      onChange={(e) => set({ oa: f.oa.map((v, j) => (j === i ? e.target.value : v)) })}
+    />
   );
 
-  const mode = <M extends string>(value: M, options: [M, Key][], onPick: (m: M) => void) => (
-    <span className="seg seg--small">
-      {options.map(([m, k]) => (
-        <button type="button" key={m} className={value === m ? "seg__on" : ""} aria-pressed={value === m} onClick={() => onPick(m)}>
-          {L(k)}
-        </button>
-      ))}
-    </span>
-  );
+  const mapLive = liveMap(f);
+  const utpiLive = liveUtpi(f);
+  const oaLive = liveOa(f);
+  const readingsEntered = f.bp.some((v) => v.trim() !== "");
 
   return (
     <div className="form">
       <section className="card">
         <h2>{L("patient")}</h2>
         <div className="grid">
-          <FieldBox label={L("name")} bad={bad("name")}>
+          <FieldBox label={L("name")} bad={false}>
             <input value={f.name} onChange={(e) => set({ name: e.target.value })} autoComplete="off" />
           </FieldBox>
-          <FieldBox label={L("pid")} bad={bad("pid")}>
+          <FieldBox label={L("pid")} bad={false}>
             <input value={f.pid} onChange={(e) => set({ pid: e.target.value })} autoComplete="off" />
           </FieldBox>
         </div>
@@ -112,24 +125,21 @@ export function AssessmentForm({ lang, f, set, missing }: Props) {
               ))}
             </select>
           </FieldBox>
-          {f.dating_method === "crl" && (
-            <FieldBox label={L("crl")} bad={bad("crl")} hint="45–84 mm">
-              <input inputMode="decimal" value={f.crl_mm} onChange={(e) => set({ crl_mm: e.target.value })} />
-              {unit("mm")}
-            </FieldBox>
+          {(f.dating_method === "crl" || f.dating_method === "bpd") && (
+            <p className="hint-line">{f.dating_method === "crl" ? "GA = 8.052 × √CRL + 23.73 (Robinson 1975)" : "GA = (BPD + 16.338) / 0.4299 (de Paco Matallana 2025)"}</p>
           )}
           {f.dating_method === "lmp" && (
-            <FieldBox label={L("lmp")} bad={bad("lmp")}><input type="date" value={f.lmp} onChange={(e) => set({ lmp: e.target.value })} /></FieldBox>
+            <FieldBox label={L("lmp")} bad={false}><input type="date" value={f.lmp} onChange={(e) => set({ lmp: e.target.value })} /></FieldBox>
           )}
           {f.dating_method === "edd" && (
-            <FieldBox label={L("edd")} bad={bad("edd")}><input type="date" value={f.edd} onChange={(e) => set({ edd: e.target.value })} /></FieldBox>
+            <FieldBox label={L("edd")} bad={false}><input type="date" value={f.edd} onChange={(e) => set({ edd: e.target.value })} /></FieldBox>
           )}
           {f.dating_method === "ivf" && (
             <>
-              <FieldBox label={L("transfer")} bad={bad("transfer")}>
+              <FieldBox label={L("transfer")} bad={false}>
                 <input type="date" value={f.transfer_date} onChange={(e) => set({ transfer_date: e.target.value })} />
               </FieldBox>
-              <FieldBox label={L("embryoAge")} bad={bad("embryoAge")}>
+              <FieldBox label={L("embryoAge")} bad={false}>
                 <select value={f.embryo_age_days} onChange={(e) => set({ embryo_age_days: e.target.value })}>
                   <option value="3">3 {L("days")}</option>
                   <option value="5">5 {L("days")}</option>
@@ -139,15 +149,16 @@ export function AssessmentForm({ lang, f, set, missing }: Props) {
             </>
           )}
           {f.dating_method === "manual" && (
-            <FieldBox label={L("gaManual")} bad={bad("gaManual")}>
+            <FieldBox label={L("gaManual")} bad={false}>
               <input className="short" inputMode="numeric" value={f.weeks} onChange={(e) => set({ weeks: e.target.value })} />
               {unit(L("weeks"))}
               <input className="short" inputMode="numeric" value={f.days} onChange={(e) => set({ days: e.target.value })} />
               {unit(L("days"))}
             </FieldBox>
           )}
+          {result && <p className="hint-line"><strong>{L("ga")} {result.ga_label}</strong> · EDD {result.edd.split("-").reverse().join("/")}</p>}
           {yesNo("vanishing_twin", "vanishingTwin")}
-          <FieldBox label={L("conception")} bad={bad("conception")}>
+          <FieldBox label={L("conception")} bad={false}>
             <select value={f.conception} onChange={(e) => set({ conception: e.target.value })}>
               {conceptions.map(([v, vi, en]) => (
                 <option key={v} value={v}>{lang === "vi" ? vi : en}</option>
@@ -162,18 +173,23 @@ export function AssessmentForm({ lang, f, set, missing }: Props) {
 
       <div className="two">
         <section className="card">
+          <h2>{L("medical")}</h2>
+          {yesNo("htn", "chronicHtn")}
+          {yesNo("dm1", "dm1")}
+          {yesNo("dm2", "dm2")}
+          {f.dm2 === "yes" && yesNo("dm2_insulin", "dm2Insulin")}
+          {yesNo("fam_pe", "famPe")}
+          {yesNo("sle", "sleOnly")}
+          {yesNo("aps", "apsOnly")}
+        </section>
+
+        <section className="card">
           <h2>{L("history")}</h2>
-          <FieldBox label={L("parity")} bad={bad("parity")}>
-            <select value={f.parity} onChange={(e) => set({ parity: e.target.value as FormState["parity"] })}>
-              <option value="" />
-              <option value="nulliparous">{L("nulliparous")}</option>
-              <option value="parous">{L("parous")}</option>
-            </select>
-          </FieldBox>
+          {choice("parity", "parity", [["nulliparous", "nulliparous"], ["parous", "parous"]])}
           {f.parity === "parous" && (
             <>
               {yesNo("prev_pe", "prevPe")}
-              <FieldBox label={L("prevGa")} bad={bad("prevGa")} hint="24–44">
+              <FieldBox label={L("prevGa")} hint="24–44" bad={bad("prevGa")}>
                 <input inputMode="decimal" value={f.prev_ga_weeks} onChange={(e) => set({ prev_ga_weeks: e.target.value })} />
                 {unit(L("weeks"))}
               </FieldBox>
@@ -183,110 +199,134 @@ export function AssessmentForm({ lang, f, set, missing }: Props) {
             </>
           )}
         </section>
-
-        <section className="card">
-          <h2>{L("medical")}</h2>
-          {check("chronic_hypertension", "chronicHtn")}
-          {check("sle_or_aps", "sle")}
-          {check("family_history_pe", "famPe")}
-          <FieldBox label={L("diabetes")} bad={bad("diabetes")}>
-            <select value={f.diabetes} onChange={(e) => set({ diabetes: e.target.value })}>
-              {diabetesTypes.map(([v, vi, en]) => (
-                <option key={v} value={v}>{lang === "vi" ? vi : en}</option>
-              ))}
-            </select>
-          </FieldBox>
-        </section>
       </div>
 
       <section className="card">
-        <h2>
-          {L("biomarkers")} <span className="muted">({L("optional")})</span>
-        </h2>
-        <div className="marker">
-          <div className="marker__head">
-            <h3>{L("map")}</h3>
-            {mode(f.map_mode, [["readings", "mapReadings"], ["value", "mapValue"], ["mom", "momValue"]], (m) => set({ map_mode: m }))}
-          </div>
-          {f.map_mode === "readings" && (
-            <div className="bp">
-              {[0, 1, 2, 3].map((i) => (
-                <div key={i} className="bp__row">
-                  <span className="muted">{i < 2 ? L("rightArm") : L("leftArm")} {(i % 2) + 1}</span>
-                  <input
-                    aria-label={`systolic ${i + 1}`}
-                    inputMode="numeric"
-                    value={f.bp[2 * i]}
-                    onChange={(e) => set({ bp: f.bp.map((v, j) => (j === 2 * i ? e.target.value : v)) })}
-                  />
-                  <span>/</span>
-                  <input
-                    aria-label={`diastolic ${i + 1}`}
-                    inputMode="numeric"
-                    value={f.bp[2 * i + 1]}
-                    onChange={(e) => set({ bp: f.bp.map((v, j) => (j === 2 * i + 1 ? e.target.value : v)) })}
-                  />
-                  {unit("mmHg")}
-                </div>
-              ))}
+        <h2>{L("ultrasound")}</h2>
+        <div className="grid">
+          {choice("heart", "heart", [["present", "present"], ["absent", "absent"]])}
+          <span />
+          <FieldBox label={L("crl")} hint="45–84 mm" bad={bad("crl")}>
+            <input inputMode="decimal" value={f.crl_mm} onChange={(e) => set({ crl_mm: e.target.value })} />
+            {unit("mm")}
+          </FieldBox>
+          <FieldBox label={L("bpd")} bad={bad("bpd")}>
+            <input inputMode="decimal" value={f.bpd_mm} onChange={(e) => set({ bpd_mm: e.target.value })} />
+            {unit("mm")}
+            {result?.bpd && <span className="mom-chip">{L("median")}: {result.bpd.median_mm.toFixed(1)} mm</span>}
+          </FieldBox>
+        </div>
+        {f.heart === "absent" && <p className="error">{lang === "vi" ? "Không có hoạt động tim thai: không áp dụng đánh giá nguy cơ." : "No fetal heart activity: risk assessment does not apply."}</p>}
+      </section>
+
+      <section className="card">
+        <h2>{L("biophysical")}</h2>
+        <h3 className="sub">{L("map")}</h3>
+        <div className="bpgrid" role="group" aria-label={L("map")}>
+          {[0, 1].map((m) => (
+            <div key={m} className="bpgrid__block">
+              <div className="bpgrid__head">
+                <span>{L("measurement")} {m + 1}</span>
+                <span>{L("sbp")}</span>
+                <span>{L("dbp")}</span>
+              </div>
+              <div className="bpgrid__row">
+                <span>{L("right")}</span>
+                {bpCell(4 * m, `${L("measurement")} ${m + 1} ${L("right")} SBP`)}
+                {bpCell(4 * m + 1, `${L("measurement")} ${m + 1} ${L("right")} DBP`)}
+              </div>
+              <div className="bpgrid__row">
+                <span>{L("left")}</span>
+                {bpCell(4 * m + 2, `${L("measurement")} ${m + 1} ${L("left")} SBP`)}
+                {bpCell(4 * m + 3, `${L("measurement")} ${m + 1} ${L("left")} DBP`)}
+              </div>
             </div>
-          )}
-          {f.map_mode === "value" && (
-            <div className="inline">
-              <input inputMode="decimal" value={f.map_mmhg} onChange={(e) => set({ map_mmhg: e.target.value })} />
-              {unit("mmHg")}
-            </div>
-          )}
-          {f.map_mode === "mom" && (
-            <div className="inline">
-              <input inputMode="decimal" value={f.map_mom} onChange={(e) => set({ map_mom: e.target.value })} />
-              {unit("MoM")}
-            </div>
-          )}
+          ))}
+        </div>
+        <div className="grid">
+          <FieldBox label="MAP" bad={false} hint="DBP + (SBP − DBP) / 3">
+            <input
+              inputMode="decimal"
+              value={readingsEntered ? fmt(mapLive) : f.map_mmhg}
+              readOnly={readingsEntered}
+              onChange={(e) => set({ map_mmhg: e.target.value })}
+            />
+            {unit("mmHg")}
+            {mom("map")}
+          </FieldBox>
+          <FieldBox label={L("operator")} bad={false}>
+            <input value={f.map_operator} onChange={(e) => set({ map_operator: e.target.value })} />
+          </FieldBox>
         </div>
 
-        <div className="marker">
-          <div className="marker__head">
-            <h3>{L("utpi")}</h3>
-            {mode(f.utpi_mode, [["raw", "raw"], ["mom", "momValue"]], (m) => set({ utpi_mode: m }))}
-          </div>
-          {f.utpi_mode === "raw" ? (
-            <div className="inline">
-              <span className="muted">{L("left")}</span>
-              <input inputMode="decimal" value={f.utpi_left} onChange={(e) => set({ utpi_left: e.target.value })} />
-              <span className="muted">{L("right")}</span>
+        <details className="fold" open>
+          <summary><h3 className="sub">{L("utpi")}</h3></summary>
+          <div className="grid">
+            <FieldBox label={L("right")} bad={false}>
               <input inputMode="decimal" value={f.utpi_right} onChange={(e) => set({ utpi_right: e.target.value })} />
-            </div>
-          ) : (
-            <div className="inline">
-              <input inputMode="decimal" value={f.utpi_mom} onChange={(e) => set({ utpi_mom: e.target.value })} />
-              {unit("MoM")}
-            </div>
-          )}
-        </div>
-
-        <div className="marker">
-          <div className="marker__head">
-            <h3>{L("plgf")}</h3>
-            {mode(f.plgf_mode, [["raw", "raw"], ["mom", "momValue"]], (m) => set({ plgf_mode: m }))}
+            </FieldBox>
+            <FieldBox label={L("left")} bad={false}>
+              <input inputMode="decimal" value={f.utpi_left} onChange={(e) => set({ utpi_left: e.target.value })} />
+            </FieldBox>
+            <FieldBox label={L("meanUtpi")} bad={false}>
+              <input value={fmt(utpiLive, 2)} readOnly aria-readonly="true" />
+              {mom("utpi")}
+            </FieldBox>
+            <FieldBox label={L("operator")} bad={false}>
+              <input value={f.utpi_operator} onChange={(e) => set({ utpi_operator: e.target.value })} />
+            </FieldBox>
           </div>
-          {f.plgf_mode === "raw" ? (
-            <div className="inline">
+        </details>
+
+        <details className="fold">
+          <summary><h3 className="sub">{L("oa")}</h3></summary>
+          <div className="grid">
+            <div>
+              <p className="muted">{L("oaRight")}</p>
+              <FieldBox label="PSV 1" bad={false}>{oaCell(0, "right PSV 1")}{unit("cm/s")}</FieldBox>
+              <FieldBox label="PSV 2" bad={false}>{oaCell(1, "right PSV 2")}{unit("cm/s")}</FieldBox>
+            </div>
+            <div>
+              <p className="muted">{L("oaLeft")}</p>
+              <FieldBox label="PSV 1" bad={false}>{oaCell(2, "left PSV 1")}{unit("cm/s")}</FieldBox>
+              <FieldBox label="PSV 2" bad={false}>{oaCell(3, "left PSV 2")}{unit("cm/s")}</FieldBox>
+            </div>
+          </div>
+          <FieldBox label={L("oa")} bad={false} hint="mean of PSV2 / PSV1">
+            <input value={fmt(oaLive, 2)} readOnly aria-readonly="true" />
+          </FieldBox>
+          <p className="hint-line">{L("oaNote")}</p>
+        </details>
+
+        <details className="fold" open>
+          <summary><h3 className="sub">{L("biochemical")}</h3></summary>
+          <div className="grid">
+            <FieldBox label={L("sampleDate")} bad={false}>
+              <input type="date" value={f.plgf_date} onChange={(e) => set({ plgf_date: e.target.value })} />
+              {result?.plgf_sample_ga_days != null && (
+                <span className="unit">
+                  {Math.floor(result.plgf_sample_ga_days / 7)} {L("weeks")} {Math.round(result.plgf_sample_ga_days) % 7} {L("days")}
+                </span>
+              )}
+            </FieldBox>
+            <span />
+            <FieldBox label={L("plgf")} bad={false}>
               <input inputMode="decimal" value={f.plgf_pg_ml} onChange={(e) => set({ plgf_pg_ml: e.target.value })} />
               {unit("pg/mL")}
-              <select aria-label={L("analyser")} value={f.plgf_analyser} onChange={(e) => set({ plgf_analyser: e.target.value })}>
+            </FieldBox>
+            <FieldBox label={L("analyser")} bad={false}>
+              <select value={f.plgf_analyser} onChange={(e) => set({ plgf_analyser: e.target.value })}>
                 {analysers.map(([v, label]) => (
                   <option key={v} value={v}>{label}</option>
                 ))}
               </select>
-            </div>
-          ) : (
-            <div className="inline">
+            </FieldBox>
+            <FieldBox label={L("momOptional")} bad={false}>
               <input inputMode="decimal" value={f.plgf_mom} onChange={(e) => set({ plgf_mom: e.target.value })} />
-              {unit("MoM")}
-            </div>
-          )}
-        </div>
+              {mom("plgf")}
+            </FieldBox>
+          </div>
+        </details>
       </section>
     </div>
   );
