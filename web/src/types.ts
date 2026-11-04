@@ -83,7 +83,7 @@ export type FormState = {
 };
 
 export type Role = "sonographer" | "doctor" | "admin";
-export type User = { username: string; display_name: string; role: Role };
+export type User = { username: string; display_name: string; role: Role; auth_mode?: string; must_change_password?: boolean };
 
 export type OutcomeData = {
   delivery_date: string | null;
@@ -127,4 +127,6 @@ export type AuditRow = {
   ip: string;
 };
 
-export type UserRow = { username: string; display_name: string; role: Role; active: boolean; last_login: string | null };
+export type UserRow = {
+  username: string; display_name: string; role: Role; active: boolean; last_login: string | null; must_change_password?: boolean;
+};

@@ -7,3 +7,4 @@
 *.db
 deploy/.env
 **/dist-standalone
+deploy/cloud/.env

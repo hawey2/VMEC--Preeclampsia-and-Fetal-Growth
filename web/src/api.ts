@@ -168,3 +168,9 @@ export const putOutcome = (id: number, o: OutcomeData) => call<ScreeningSummary>
 export const getAudit = (username: string, action: string) =>
   call<AuditRow[]>("GET", `/api/audit?username=${encodeURIComponent(username)}&action=${encodeURIComponent(action)}`);
 export const getUsers = () => call<UserRow[]>("GET", "/api/users");
+export const authMode = () => call<{ auth_mode: string }>("GET", "/api/auth/config");
+export const changePassword = (current: string, next: string) => call<User>("POST", "/api/auth/password", { current, new: next });
+export const createUser = (u: { username: string; display_name: string; role: string; password: string }) =>
+  call<UserRow>("POST", "/api/users", u);
+export const updateUser = (username: string, patch: { display_name?: string; role?: string; active?: boolean; password?: string }) =>
+  call<UserRow>("PATCH", `/api/users/${encodeURIComponent(username)}`, patch);

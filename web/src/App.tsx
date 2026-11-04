@@ -9,7 +9,7 @@ import { Charts } from "./Charts";
 import { HowItWorks } from "./How";
 import { Info } from "./Info";
 import type { AssessmentOut, FormState, ScreeningSummary, User } from "./types";
-import { Login } from "./Login";
+import { ChangePassword, Login } from "./Login";
 import { History, RecordBar } from "./Records";
 import { Admin } from "./Admin";
 
@@ -82,6 +82,8 @@ export default function App() {
     __STANDALONE__ ? { username: "", display_name: "", role: "sonographer" } : undefined,
   );
   const [notice, setNotice] = useState("");
+  const [changingPw, setChangingPw] = useState(false);
+  const mustChange = !!user?.must_change_password;
   useEffect(() => {
     if (__STANDALONE__) return;
     me().then(setUser).catch(() => setUser(null));
@@ -258,6 +260,9 @@ export default function App() {
           {user && !__STANDALONE__ && (
             <div className="whoami">
               <span><strong>{user.display_name}</strong> · {L(`role_${user.role}` as Key)}</span>
+              {user.auth_mode === "local" && (
+                <button type="button" className="link" onClick={() => setChangingPw(true)}>{L("changePassword")}</button>
+              )}
               <button type="button" className="link" onClick={signOut}>{L("signOut")}</button>
             </div>
           )}
@@ -275,8 +280,12 @@ export default function App() {
         {user === null && (
           <Login lang={lang} notice={notice ? L("sessionExpired") : ""} onDone={(u) => { setUser(u); setNotice(""); }} />
         )}
-        {user?.role === "admin" && <Admin lang={lang} />}
-        {user && user.role !== "admin" && (
+        {user && (mustChange || changingPw) && (
+          <ChangePassword lang={lang} forced={mustChange} onCancel={mustChange ? undefined : () => setChangingPw(false)}
+            onDone={(u) => { setUser(u); setChangingPw(false); }} />
+        )}
+        {user?.role === "admin" && !mustChange && !changingPw && <Admin lang={lang} self={user.username} local={user.auth_mode === "local"} />}
+        {user && user.role !== "admin" && !mustChange && !changingPw && (
         <>
         <AssessmentForm lang={lang} f={f} set={set} missing={missing} result={result} />
 

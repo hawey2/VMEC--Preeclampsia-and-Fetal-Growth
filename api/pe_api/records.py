@@ -7,6 +7,7 @@ import hashlib
 import hmac
 import io
 from datetime import date, datetime, timezone
+from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import Response
@@ -16,9 +17,10 @@ from sqlalchemy.orm import Session
 
 from . import audit
 from .assessment import COEF, compute
-from .auth import require
+from .auth import end_all_sessions, require
 from .config import Settings, get_settings
 from .db import get_db
+from .passwords import WeakPassword, check_strength, hash_password
 from .models import AuditLog, CoefficientSet, Outcome, Patient, Screening, User
 from .schemas import AssessmentIn
 
@@ -207,11 +209,85 @@ def audit_log(request: Request, username: str = "", action: str = "", limit: int
             for r in rows]
 
 
+def _user_row(u: User) -> dict:
+    return {"username": u.username, "display_name": u.display_name, "role": u.role, "active": u.active,
+            "last_login": u.last_login.isoformat() if u.last_login else None,
+            "must_change_password": bool(u.must_change_password)}
+
+
 @router.get("/users")
 def users(db: Session = Depends(get_db), user: User = Depends(require("admin"))):
-    return [{"username": u.username, "display_name": u.display_name, "role": u.role, "active": u.active,
-             "last_login": u.last_login.isoformat() if u.last_login else None}
-            for u in db.scalars(select(User).order_by(User.username)).all()]
+    return [_user_row(u) for u in db.scalars(select(User).order_by(User.username)).all()]
+
+
+class NewUserIn(BaseModel):
+    username: str = Field(min_length=2, max_length=64, pattern=r"^[A-Za-z0-9._-]+$")
+    display_name: str = Field(min_length=1, max_length=200)
+    role: Literal["sonographer", "doctor", "admin"]
+    password: str
+
+
+class UserPatch(BaseModel):
+    display_name: str | None = Field(None, min_length=1, max_length=200)
+    role: Literal["sonographer", "doctor", "admin"] | None = None
+    active: bool | None = None
+    password: str | None = None
+    """A temporary password: the person must change it at the next sign-in."""
+
+
+def _local_only(s: Settings) -> None:
+    if s.auth_mode != "local":
+        raise HTTPException(409, "accounts are managed by Vinmec accounts (LDAP)")
+
+
+@router.post("/users", status_code=201)
+def create_user(body: NewUserIn, request: Request, db: Session = Depends(get_db),
+                user: User = Depends(require("admin")), s: Settings = Depends(get_settings)):
+    """Admin adds an account (cloud deployment). The password is temporary: it must be changed at first sign-in."""
+    _local_only(s)
+    if db.scalar(select(User).where(User.username == body.username)):
+        raise HTTPException(409, "this username already exists")
+    try:
+        check_strength(body.password, body.username)
+    except WeakPassword as e:
+        raise HTTPException(422, str(e)) from e
+    u = User(username=body.username, display_name=body.display_name.strip(), role=body.role,
+             password_hash=hash_password(body.password), must_change_password=True)
+    db.add(u)
+    db.flush()
+    audit.log(db, request, user, "user_create", "user", u.username, role=u.role)
+    db.commit()
+    return _user_row(u)
+
+
+@router.patch("/users/{username}")
+def update_user(username: str, body: UserPatch, request: Request, db: Session = Depends(get_db),
+                user: User = Depends(require("admin")), s: Settings = Depends(get_settings)):
+    """Change role or name, disable or enable, or set a temporary password (cloud deployment)."""
+    _local_only(s)
+    u = db.scalar(select(User).where(User.username == username))
+    if u is None:
+        raise HTTPException(404, "user not found")
+    if u.id == user.id and (body.active is False or (body.role and body.role != "admin")):
+        raise HTTPException(422, "you cannot disable or demote your own account")
+    changes = body.model_dump(exclude_none=True)
+    if body.password is not None:
+        try:
+            check_strength(body.password, u.username)
+        except WeakPassword as e:
+            raise HTTPException(422, str(e)) from e
+        u.password_hash, u.must_change_password, u.locked_until, u.failed_logins = (
+            hash_password(body.password), True, None, 0)
+    for k in ("display_name", "role", "active"):
+        if k in changes:
+            setattr(u, k, changes[k])
+    if body.active is False or body.password is not None or body.role is not None:
+        end_all_sessions(db, u)
+    changes.pop("password", None)
+    audit.log(db, request, user, "user_update", "user", u.username,
+              **changes, **({"password_reset": True} if body.password is not None else {}))
+    db.commit()
+    return _user_row(u)
 
 
 EXPORT_COLUMNS = [

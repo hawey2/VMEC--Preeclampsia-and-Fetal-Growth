@@ -10,3 +10,4 @@ pe_local.db
 deploy/.env
 deploy/certs/
 deploy/backup.env
+deploy/cloud/.env

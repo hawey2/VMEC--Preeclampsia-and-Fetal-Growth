@@ -17,9 +17,10 @@ from sqlalchemy.orm import Session
 
 from . import audit, db, migrate
 from .assessment import COEF, CUTOFF_ONE_IN, compute
-from .auth import AuthError, check_password, current_user, end_session, start_session, upsert_user
+from .auth import AuthError, check_local, check_password, current_user, end_session, require, start_session, upsert_user
 from .config import Settings, get_settings
 from .models import User
+from .passwords import WeakPassword, check_strength, hash_password, verify_password
 from .records import CLINICAL, router as records_router
 from .schemas import AssessmentIn, AssessmentOut
 
@@ -27,6 +28,11 @@ from .schemas import AssessmentIn, AssessmentOut
 class LoginIn(BaseModel):
     username: str
     password: str
+
+
+class PasswordIn(BaseModel):
+    current: str
+    new: str
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -55,19 +61,28 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             "combined_available": COEF.has_likelihood(),
         }
 
+    @app.get("/api/auth/config")
+    def auth_config():
+        """How people sign in, so the sign-in screen can say which account to use."""
+        return {"auth_mode": settings.auth_mode}
+
     @app.post("/api/auth/login")
     def login(body: LoginIn, request: Request, response: Response, s: Session = Depends(db.get_db)):
+        username = body.username.strip()
         try:
-            display, role = check_password(settings, body.username.strip(), body.password)
+            if settings.auth_mode == "local":
+                user = check_local(s, username, body.password)
+            else:
+                display, role = check_password(settings, username, body.password)
+                user = upsert_user(s, username, display, role)
         except AuthError as e:
-            audit.log(s, request, None, "login_failed", username=body.username.strip()[:128], reason=str(e))
+            audit.log(s, request, None, "login_failed", username=username[:128], reason=str(e))
             s.commit()
-            raise HTTPException(401, "wrong username or password") from e
-        user = upsert_user(s, body.username.strip(), display, role)
+            raise HTTPException(401, "account locked" if str(e) == "account locked" else "wrong username or password") from e
         start_session(s, response, user, settings)
         audit.log(s, request, user, "login")
         s.commit()
-        return {"username": user.username, "display_name": user.display_name, "role": user.role}
+        return _me(user)
 
     @app.post("/api/auth/logout")
     def logout(request: Request, response: Response, s: Session = Depends(db.get_db)):
@@ -75,16 +90,40 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         s.commit()
         return {"ok": True}
 
+    def _me(user: User) -> dict:
+        return {"username": user.username, "display_name": user.display_name, "role": user.role,
+                "idle_minutes": settings.session_idle_minutes, "auth_mode": settings.auth_mode,
+                "must_change_password": bool(settings.auth_mode == "local" and user.must_change_password)}
+
     @app.get("/api/auth/me")
     def me(user: User = Depends(current_user)):
-        return {"username": user.username, "display_name": user.display_name, "role": user.role,
-                "idle_minutes": settings.session_idle_minutes}
+        return _me(user)
+
+    @app.post("/api/auth/password")
+    def change_password(body: PasswordIn, request: Request, user: User = Depends(current_user),
+                        s: Session = Depends(db.get_db)):
+        """Change your own password (local accounts). Required after an admin sets a temporary one."""
+        if settings.auth_mode != "local":
+            raise HTTPException(409, "passwords are managed by Vinmec accounts")
+        user = s.merge(user)
+        if not verify_password(body.current, user.password_hash):
+            audit.log(s, request, user, "password_change_failed")
+            s.commit()
+            raise HTTPException(422, "current password is wrong")
+        if body.new == body.current:
+            raise HTTPException(422, "new password must be different")
+        try:
+            check_strength(body.new, user.username)
+        except WeakPassword as e:
+            raise HTTPException(422, str(e)) from e
+        user.password_hash, user.must_change_password = hash_password(body.new), False
+        audit.log(s, request, user, "password_change")
+        s.commit()
+        return _me(user)
 
     @app.post("/api/assess", response_model=AssessmentOut)
-    def run_assessment(a: AssessmentIn, user: User = Depends(current_user)) -> AssessmentOut:
+    def run_assessment(a: AssessmentIn, user: User = Depends(require(*CLINICAL))) -> AssessmentOut:
         """Live calculation while the form is filled in; nothing is stored."""
-        if user.role not in CLINICAL:
-            raise HTTPException(403, "your role cannot do this")
         return compute(a)
 
     app.include_router(records_router)

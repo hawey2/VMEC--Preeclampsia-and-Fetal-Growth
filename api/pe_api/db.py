@@ -41,3 +41,9 @@ def get_db() -> Iterator[Session]:
         yield s
     finally:
         s.close()
+
+
+def session() -> Session:
+    """A session for scripts (use as a context manager)."""
+    assert _factory is not None, "init_engine() first"
+    return _factory()

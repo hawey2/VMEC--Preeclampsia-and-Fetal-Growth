@@ -37,7 +37,7 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install -e 'engine[test]' -e 'api[test]'
-      - run: pytest -q api/tests/test_records.py
+      - run: pytest -q api/tests/test_records.py api/tests/test_local_accounts.py
         env:
           PE_TEST_DATABASE_URL: postgresql+psycopg://pe:pe@127.0.0.1:5432/pe_test
 
@@ -67,3 +67,8 @@ jobs:
           docker run -d --name pe -p 8000:8000 -e PE_DATABASE_URL=sqlite:////tmp/pe.db vinmec/pe-risk:ci
           for i in $(seq 1 30); do curl -fs localhost:8000/api/health && exit 0; sleep 1; done
           docker logs pe; exit 1
+      - name: cloud deployment files are valid
+        run: |
+          cd deploy/cloud && cp .env.example .env && docker compose config -q && rm .env
+          docker run --rm -e PE_DOMAIN=tsg.example.vn -e PE_ACME_EMAIL=it@example.vn \
+            -v "$PWD/Caddyfile:/etc/caddy/Caddyfile:ro" caddy:2.8 caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile

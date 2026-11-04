@@ -231,3 +231,10 @@ a.button { display: inline-block; text-decoration: none; padding: 8px 14px; bord
 a.button.primary { background: var(--accent); color: var(--accent-ink); font-weight: 600; }
 .nowrap { white-space: nowrap; }
 @media print { .pr__signed { display: block; margin-top: 4px; font-size: 9pt; } }
+
+/* Account management (cloud accounts) */
+.add-user { border-top: 1px solid var(--line); margin-top: 16px; padding-top: 12px; display: grid; gap: 8px; justify-items: start; }
+.add-user h3 { margin: 0; }
+.inline-form { display: inline-flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.inline-form input { width: 12em; }
+tr.is-disabled td { color: var(--muted); }

@@ -1,4 +1,8 @@
-"""Sign-in against Vinmec accounts (LDAP / Active Directory), sessions and roles.
+"""Sign-in, sessions and roles.
+
+Three ways to sign in (PE_AUTH_MODE): "ldap" = Vinmec accounts (hospital server), "local" = accounts
+kept by the app itself with hashed passwords (cloud server, see passwords.py and users.py), "dev" =
+fixed test accounts (local use and tests only).
 
 Roles: sonographer (screen, save, print, enter outcomes), doctor (all of that and
 sign), admin (audit log, research export, users). In LDAP mode the role comes from
@@ -19,6 +23,7 @@ from sqlalchemy.orm import Session
 from .config import Settings, get_settings
 from .db import get_db
 from .models import SessionToken, User
+from .passwords import verify_password
 
 COOKIE = "pe_session"
 ROLES = ("sonographer", "doctor", "admin")
@@ -47,6 +52,8 @@ def check_password(s: Settings, username: str, password: str) -> tuple[str, str]
         return username, entry[1]
     if s.auth_mode == "ldap":
         return _ldap_check(s, username, password)
+    if s.auth_mode == "local":
+        raise AuthError("local accounts are checked with check_local")
     raise AuthError(f"unknown auth mode {s.auth_mode!r}")
 
 
@@ -73,6 +80,40 @@ def _ldap_check(s: Settings, username: str, password: str) -> tuple[str, str]:
         if group and group.lower() in groups:
             return display, role
     raise AuthError("account is not in an allowed group")
+
+
+MAX_FAILED = 5
+LOCK_MINUTES = 15
+
+
+def _aware(t: datetime) -> datetime:
+    return t if t.tzinfo else t.replace(tzinfo=timezone.utc)
+
+
+def check_local(db: Session, username: str, password: str) -> User:
+    """App-owned account: the password hash is in the users table. Five wrong passwords in a row
+    lock the account for 15 minutes."""
+    if not username or not password:
+        raise AuthError("missing credentials")
+    user = db.scalar(select(User).where(User.username == username))
+    now = datetime.now(timezone.utc)
+    if user is not None and user.locked_until and _aware(user.locked_until) > now:
+        verify_password(password, None)
+        raise AuthError("account locked")
+    if user is None or not user.active or not verify_password(password, user.password_hash):
+        if user is not None:
+            user.failed_logins = (user.failed_logins or 0) + 1
+            if user.failed_logins >= MAX_FAILED:
+                user.locked_until, user.failed_logins = now + timedelta(minutes=LOCK_MINUTES), 0
+        raise AuthError("wrong username or password" if user is None or user.active else "account disabled")
+    user.failed_logins, user.locked_until, user.last_login = 0, None, now
+    db.flush()
+    return user
+
+
+def end_all_sessions(db: Session, user: User) -> None:
+    for row in db.scalars(select(SessionToken).where(SessionToken.user_id == user.id)).all():
+        db.delete(row)
 
 
 def _hash(token: str) -> str:
@@ -112,7 +153,9 @@ def current_user(request: Request, db: Session = Depends(get_db),
 
 
 def require(*roles: str):
-    def dep(user: User = Depends(current_user)) -> User:
+    def dep(user: User = Depends(current_user), s: Settings = Depends(get_settings)) -> User:
+        if s.auth_mode == "local" and user.must_change_password:
+            raise HTTPException(403, "change your password first")
         if user.role not in roles:
             raise HTTPException(403, "your role cannot do this")
         return user

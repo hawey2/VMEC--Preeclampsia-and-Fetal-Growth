@@ -1,0 +1,51 @@
+# Cloud server: Caddy (automatic HTTPS from Let's Encrypt) -> app -> PostgreSQL 16.
+# Accounts are kept by the app (PE_AUTH_MODE=local). Settings live in deploy/cloud/.env.
+# Only ports 80 and 443 are open to the internet; the database is reachable only inside Docker.
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: pe
+      POSTGRES_PASSWORD: ${PE_DB_PASSWORD:?set PE_DB_PASSWORD in .env}
+      POSTGRES_DB: pe
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pe"]
+      interval: 10s
+      retries: 10
+
+  app:
+    image: vinmec/pe-risk:${PE_VERSION:-latest}
+    build: ../..
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      PE_DATABASE_URL: postgresql+psycopg://pe:${PE_DB_PASSWORD}@db:5432/pe
+      PE_AUTH_MODE: local
+      PE_COOKIE_SECURE: "1"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  caddy:
+    image: caddy:2.8
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      PE_DOMAIN: ${PE_DOMAIN:?set PE_DOMAIN in .env}
+      PE_ACME_EMAIL: ${PE_ACME_EMAIL:?set PE_ACME_EMAIL in .env}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - app
+
+volumes:
+  pgdata:
+  caddy_data:
+  caddy_config:

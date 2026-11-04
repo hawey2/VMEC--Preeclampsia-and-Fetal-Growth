@@ -19,6 +19,7 @@ Plans: [Plan and Build Draft](https://claude.ai/artifact/3V88CyXtFYyxDFsc1MkDMV)
 | 2 | Web form, charts, formulas and A4 print (VI / EN) | In review |
 | 3 | PostgreSQL, Vinmec sign-in (LDAP), records, sign-off, outcomes, audit log | In review |
 | 4 | Docker deployment on the hospital server | Files ready ([deploy/](deploy/README.md)); waiting for a server |
+| 4b | Cloud deployment with app-owned accounts and automatic HTTPS | Files ready ([deploy/cloud/](deploy/cloud/README.md), in Vietnamese); needs a VM, a domain and Vinmec's data-protection approval |
 | 5 | Validation on Vinmec outcomes, recalibration if needed | Not started (needs ethics approval) |
 
 ## Standalone website
@@ -48,7 +49,10 @@ uvicorn pe_api.main:app --app-dir api --port 8000
 ```
 
 Locally the app uses SQLite (`pe_local.db`) and three test accounts (`PE_AUTH_MODE=dev`). In the hospital it
-uses PostgreSQL and Vinmec accounts over LDAP: see [deploy/README.md](deploy/README.md).
+uses PostgreSQL and Vinmec accounts over LDAP: see [deploy/README.md](deploy/README.md). On a cloud server it uses
+PostgreSQL and accounts kept by the app (`PE_AUTH_MODE=local`: scrypt-hashed passwords, temporary password changed at
+first sign-in, 5 wrong passwords lock the account for 15 minutes, administrators add and disable accounts in the app,
+first administrator from `python -m pe_api.users add`): see [deploy/cloud/README.md](deploy/cloud/README.md).
 For front-end work, run `npm run dev` in `web/` (it proxies `/api` to port 8000).
 
 - **Roles:** sonographers screen, save, print and enter outcomes; doctors can also sign; administrators see the
