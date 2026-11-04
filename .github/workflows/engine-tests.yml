@@ -15,6 +15,8 @@ jobs:
       - run: pip install -e 'engine[test]' -e 'api[test]'
       - run: pytest -q engine
       - run: pytest -q api
+      - name: browser-engine test cases are up to date with the Python engine
+        run: python web/tests/make_parity_cases.py && git diff --exit-code web/tests/parity_cases.json
 
   postgres:
     # The record, audit and export tests again, on PostgreSQL 16 as in the hospital.
@@ -51,6 +53,8 @@ jobs:
           node-version: "20"
       - run: npm ci
       - run: npm run build
+      - run: npm test
+      - run: npm run build:standalone
 
   docker:
     # The image the hospital server runs must build.

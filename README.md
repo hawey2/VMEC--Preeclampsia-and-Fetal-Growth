@@ -21,6 +21,23 @@ Plans: [Plan and Build Draft](https://claude.ai/artifact/3V88CyXtFYyxDFsc1MkDMV)
 | 4 | Docker deployment on the hospital server | Files ready ([deploy/](deploy/README.md)); waiting for a server |
 | 5 | Validation on Vinmec outcomes, recalibration if needed | Not started (needs ethics approval) |
 
+## Standalone website
+
+A separate version of the calculator that needs no server, sign-in or database. It is a single HTML
+file: the risk is calculated in the browser, nothing is saved or sent anywhere, and the report prints
+the same way. Open it from a USB stick or a shared folder, or publish it as a website.
+
+```bash
+cd web && npm ci && npm run build:standalone   # → web/dist-standalone/index.html
+```
+
+- **Website:** `.github/workflows/standalone-site.yml` publishes it to GitHub Pages. Turn it on once in
+  the repository's Settings → Pages → Source: "GitHub Actions", then run the workflow (it also runs on
+  every push to `main`).
+- **Same numbers as the server:** the browser engine (`web/src/engine/`) is a copy of the Python
+  engine. `web/tests/parity.test.ts` checks it against the Python API on 300 generated cases
+  (`web/tests/make_parity_cases.py`), and CI fails if the cases are out of date.
+
 ## Run the app locally
 
 ```bash

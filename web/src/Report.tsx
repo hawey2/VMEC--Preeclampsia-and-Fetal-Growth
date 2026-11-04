@@ -157,7 +157,7 @@ export function PrintReport({ r, facts, lang, record }: { r: AssessmentOut; fact
           <div>
             {record
               ? `${L("recordNo")} ${record.id} · ${L("versionWord")} ${record.version} · ${L(`status_${record.status}` as Key)}`
-              : L("notSaved")}
+              : L(__STANDALONE__ ? "notSavedStandalone" : "notSaved")}
           </div>
         </div>
       </header>

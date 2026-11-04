@@ -77,9 +77,13 @@ export default function App() {
   const L = (k: Key) => t(lang, k);
 
   // Sign-in: undefined while checking, null when signed out.
-  const [user, setUser] = useState<User | null | undefined>(undefined);
+  // The standalone website has no server: no sign-in, nothing saved.
+  const [user, setUser] = useState<User | null | undefined>(
+    __STANDALONE__ ? { username: "", display_name: "", role: "sonographer" } : undefined,
+  );
   const [notice, setNotice] = useState("");
   useEffect(() => {
+    if (__STANDALONE__) return;
     me().then(setUser).catch(() => setUser(null));
     const onExpired = () => {
       setUser((u) => {
@@ -211,7 +215,7 @@ export default function App() {
   const printIn = async (l: Lang) => {
     // Every printed report carries a record number: save first when there are unsaved changes.
     let rec = record && !dirty ? record.summary : null;
-    if (!rec && f.pid.trim()) rec = await saveRecord();
+    if (!rec && f.pid.trim() && !__STANDALONE__) rec = await saveRecord();
     if (rec) await markPrinted(rec.id, l).catch(() => undefined);
     flushSync(() => setPrintLang(l));
     window.print();
@@ -251,7 +255,7 @@ export default function App() {
             <p className="muted">{L("appSub")}</p>
           </div>
           <div className="top__right">
-          {user && (
+          {user && !__STANDALONE__ && (
             <div className="whoami">
               <span><strong>{user.display_name}</strong> · {L(`role_${user.role}` as Key)}</span>
               <button type="button" className="link" onClick={signOut}>{L("signOut")}</button>
@@ -265,6 +269,7 @@ export default function App() {
         </header>
 
         <div className="banner" role="note">{L("notClinical")}</div>
+        {__STANDALONE__ && <p className="note standalone-note">{L("standaloneNote")}</p>}
 
         {user === undefined && <p className="muted">…</p>}
         {user === null && (
@@ -294,8 +299,8 @@ export default function App() {
                 <button type="button" onClick={() => printIn(lang === "vi" ? "en" : "vi")}>{L("printOther")}</button>
               </div>
             </div>
-            <RecordBar lang={lang} role={user.role} record={record?.summary ?? null} dirty={dirty || (!!record && !samePatient)}
-              hasPid={!!f.pid.trim()} busy={saving} onSave={saveRecord} onSign={signRecord} />
+            {!__STANDALONE__ && <RecordBar lang={lang} role={user.role} record={record?.summary ?? null} dirty={dirty || (!!record && !samePatient)}
+              hasPid={!!f.pid.trim()} busy={saving} onSave={saveRecord} onSign={signRecord} />}
             <p className="muted">
               {L("ga")} {result.ga_label} ({L("dating")} {result.dating_method.toUpperCase()}) · {L("age")} {result.age_years.toFixed(1)} {L("years")}
             </p>
@@ -318,7 +323,7 @@ export default function App() {
         )}
         {result && submitted && <Charts r={result} lang={lang} />}
         {result && submitted && <HowItWorks r={result} f={submitted} lang={lang} />}
-        <History pid={f.pid} lang={lang} refreshKey={historyKey} currentId={record?.summary.id ?? null} onOpen={openRecord} />
+        {!__STANDALONE__ && <History pid={f.pid} lang={lang} refreshKey={historyKey} currentId={record?.summary.id ?? null} onOpen={openRecord} />}
         </>
         )}
         <Info lang={lang} />

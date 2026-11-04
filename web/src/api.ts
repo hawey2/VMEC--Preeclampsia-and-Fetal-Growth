@@ -146,7 +146,11 @@ async function call<T>(method: string, url: string, body?: unknown): Promise<T> 
   return data as T;
 }
 
-export const assess = (body: unknown) => call<AssessmentOut>("POST", "/api/assess", body);
+/** On the standalone website the browser calculates; nothing is sent anywhere. */
+export const assess = (body: unknown): Promise<AssessmentOut> =>
+  __STANDALONE__
+    ? import("./engine/compute").then((m) => m.compute(body))
+    : call<AssessmentOut>("POST", "/api/assess", body);
 
 export const login = (username: string, password: string) => call<User>("POST", "/api/auth/login", { username, password });
 export const logout = () => call<{ ok: boolean }>("POST", "/api/auth/logout");

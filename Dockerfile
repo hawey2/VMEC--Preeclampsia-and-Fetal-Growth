@@ -2,9 +2,11 @@
 
 # 1. Build the web pages.
 FROM node:20-alpine AS web
-WORKDIR /web
+WORKDIR /src/web
 COPY web/package.json web/package-lock.json ./
 RUN npm ci
+# The build reads the coefficient file to print its checksum.
+COPY engine/pe_risk/coefficients/ /src/engine/pe_risk/coefficients/
 COPY web/ ./
 RUN npm run build
 
@@ -16,7 +18,7 @@ COPY engine/ engine/
 COPY api/ api/
 RUN pip install --no-cache-dir ./engine ./api \
  && useradd --system --uid 10001 pe
-COPY --from=web /web/dist web/dist
+COPY --from=web /src/web/dist web/dist
 USER pe
 EXPOSE 8000
 HEALTHCHECK --interval=60s --timeout=5s --retries=3 \

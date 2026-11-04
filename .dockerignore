@@ -6,3 +6,4 @@
 .git
 *.db
 deploy/.env
+**/dist-standalone
