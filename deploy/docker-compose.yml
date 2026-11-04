@@ -1,0 +1,42 @@
+# Hospital server: Nginx (HTTPS) -> app -> PostgreSQL 16. Settings live in deploy/.env.
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: pe
+      POSTGRES_PASSWORD: ${PE_DB_PASSWORD:?set PE_DB_PASSWORD in .env}
+      POSTGRES_DB: pe
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pe"]
+      interval: 10s
+      retries: 10
+
+  app:
+    image: vinmec/pe-risk:${PE_VERSION:-latest}
+    build: ..
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      PE_DATABASE_URL: postgresql+psycopg://pe:${PE_DB_PASSWORD}@db:5432/pe
+      PE_COOKIE_SECURE: "1"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    ports:
+      - "443:443"
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./certs:/etc/nginx/certs:ro
+    depends_on:
+      - app
+
+volumes:
+  pgdata:

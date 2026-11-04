@@ -3,9 +3,22 @@ import copy
 import pytest
 from fastapi.testclient import TestClient
 
-from pe_api.main import app
+from pe_api.config import Settings
+from pe_api.main import create_app
 
-client = TestClient(app)
+
+client: TestClient  # set by _signed_in below
+
+
+@pytest.fixture(scope="module", autouse=True)
+def _signed_in(tmp_path_factory):
+    """A signed-in sonographer on a fresh SQLite database, as the module-wide `client`."""
+    global client
+    url = f"sqlite:///{tmp_path_factory.mktemp('db') / 'pe.db'}"
+    with TestClient(create_app(Settings(database_url=url, auth_mode="dev"))) as c:
+        assert c.post("/api/auth/login", json={"username": "sono", "password": "sono"}).status_code == 200
+        client = c
+        yield c
 
 BASE = {
     "patient": {"name": "Nguyen Thi A", "pid": "TEST-0001"},

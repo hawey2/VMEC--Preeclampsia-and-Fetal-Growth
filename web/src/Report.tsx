@@ -1,6 +1,7 @@
 import { analysers, markerName, t, type Key, type Lang } from "./i18n";
-import type { AssessmentOut, Risk } from "./types";
+import type { AssessmentOut, Risk, ScreeningSummary } from "./types";
 import { compactWarnings, msg } from "./messages";
+import { fmtDateTime } from "./Records";
 
 const analyserName: Record<string, string> = Object.fromEntries(analysers);
 
@@ -140,7 +141,7 @@ export function RiskLines({ r, lang }: { r: AssessmentOut; lang: Lang }) {
 type Facts = { label: Key; value: string }[];
 
 /** One-page A4 report in a single language (the one chosen when printing). */
-export function PrintReport({ r, facts, lang }: { r: AssessmentOut; facts: Facts; lang: Lang }) {
+export function PrintReport({ r, facts, lang, record }: { r: AssessmentOut; facts: Facts; lang: Lang; record: ScreeningSummary | null }) {
   const L = (k: Key) => t(lang, k);
   const head = headlineCombo(r);
   return (
@@ -153,6 +154,11 @@ export function PrintReport({ r, facts, lang }: { r: AssessmentOut; facts: Facts
         <div className="pr__meta">
           <div>{L("examDate")}: {fmtDate(r.exam_date)}</div>
           <div>{L("printed")}: {r.generated_at.replace("T", " ").slice(0, 16)}</div>
+          <div>
+            {record
+              ? `${L("recordNo")} ${record.id} · ${L("versionWord")} ${record.version} · ${L(`status_${record.status}` as Key)}`
+              : L("notSaved")}
+          </div>
         </div>
       </header>
 
@@ -211,7 +217,10 @@ export function PrintReport({ r, facts, lang }: { r: AssessmentOut; facts: Facts
 
       <section className="pr__sign">
         <div><span>{L("measuredBy")}</span></div>
-        <div><span>{L("doctor")}</span></div>
+        <div>
+          <span>{L("doctor")}</span>
+          {record?.signed_by && <strong className="pr__signed">{record.signed_by} · {fmtDateTime(record.signed_at!, lang)}</strong>}
+        </div>
       </section>
 
       <footer className="pr__foot">

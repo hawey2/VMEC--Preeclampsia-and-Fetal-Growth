@@ -1,4 +1,4 @@
-import type { AssessmentOut, FormState } from "./types";
+import type { AssessmentOut, AuditRow, FormState, OutcomeData, ScreeningFull, ScreeningSummary, User, UserRow } from "./types";
 
 const num = (s: string) => (s.trim() === "" ? null : Number(s));
 
@@ -124,19 +124,43 @@ export function buildRequest(f: FormState): unknown {
   };
 }
 
-export async function assess(body: unknown): Promise<AssessmentOut> {
-  const res = await fetch("/api/assess", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
+/** Fired when the server says the session is missing or expired, so the app shows the sign-in screen. */
+export const UNAUTHORIZED = "pe-unauthorized";
+
+async function call<T>(method: string, url: string, body?: unknown): Promise<T> {
+  const res = await fetch(url, {
+    method,
+    credentials: "same-origin",
+    headers: body === undefined ? undefined : { "Content-Type": "application/json" },
+    body: body === undefined ? undefined : JSON.stringify(body),
   });
-  const data = await res.json();
+  const data = res.headers.get("content-type")?.includes("json") ? await res.json() : null;
   if (!res.ok) {
     const detail = data?.detail;
     const msg = Array.isArray(detail)
       ? detail.map((d: { loc?: string[]; msg: string }) => `${(d.loc ?? []).slice(1).join(".")}: ${d.msg}`).join("; ")
       : String(detail ?? res.statusText);
+    if (res.status === 401 && !url.endsWith("/login")) window.dispatchEvent(new CustomEvent(UNAUTHORIZED, { detail: msg }));
     throw new Error(msg);
   }
-  return data as AssessmentOut;
+  return data as T;
 }
+
+export const assess = (body: unknown) => call<AssessmentOut>("POST", "/api/assess", body);
+
+export const login = (username: string, password: string) => call<User>("POST", "/api/auth/login", { username, password });
+export const logout = () => call<{ ok: boolean }>("POST", "/api/auth/logout");
+export const me = () => call<User>("GET", "/api/auth/me");
+
+export const saveScreening = (assessment: unknown, form: FormState) =>
+  call<ScreeningFull>("POST", "/api/screenings", { assessment, form_state: form });
+export const amendScreening = (id: number, assessment: unknown, form: FormState) =>
+  call<ScreeningFull>("POST", `/api/screenings/${id}/amend`, { assessment, form_state: form });
+export const getHistory = (pid: string) => call<ScreeningSummary[]>("GET", `/api/patients/${encodeURIComponent(pid)}/screenings`);
+export const getScreening = (id: number) => call<ScreeningFull>("GET", `/api/screenings/${id}`);
+export const signScreening = (id: number) => call<ScreeningSummary>("POST", `/api/screenings/${id}/sign`);
+export const markPrinted = (id: number, lang: string) => call<{ ok: boolean }>("POST", `/api/screenings/${id}/printed?lang=${lang}`);
+export const putOutcome = (id: number, o: OutcomeData) => call<ScreeningSummary>("PUT", `/api/screenings/${id}/outcome`, o);
+export const getAudit = (username: string, action: string) =>
+  call<AuditRow[]>("GET", `/api/audit?username=${encodeURIComponent(username)}&action=${encodeURIComponent(action)}`);
+export const getUsers = () => call<UserRow[]>("GET", "/api/users");

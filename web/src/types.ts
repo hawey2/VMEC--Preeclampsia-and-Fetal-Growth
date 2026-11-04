@@ -81,3 +81,50 @@ export type FormState = {
   plgf_analyser: string;
   plgf_mom: string;
 };
+
+export type Role = "sonographer" | "doctor" | "admin";
+export type User = { username: string; display_name: string; role: Role };
+
+export type OutcomeData = {
+  delivery_date: string | null;
+  ga_at_delivery_days: number | null;
+  preeclampsia: boolean;
+  pe_ga_days: number | null;
+  aspirin: boolean | null;
+  notes: string;
+  entered_by?: string;
+  entered_at?: string;
+};
+
+export type ScreeningSummary = {
+  id: number;
+  version: number;
+  replaces_id: number | null;
+  status: "draft" | "signed" | "superseded";
+  pid: string;
+  name: string;
+  exam_date: string;
+  ga_label: string;
+  risk37_one_in: number | null;
+  high_risk: boolean;
+  created_by: string;
+  created_at: string;
+  signed_by: string | null;
+  signed_at: string | null;
+  outcome: OutcomeData | null;
+};
+
+export type ScreeningFull = ScreeningSummary & { request: unknown; form_state: FormState | null; result: AssessmentOut };
+
+export type AuditRow = {
+  id: number;
+  at: string;
+  username: string;
+  action: string;
+  target_type: string;
+  target_id: string;
+  detail: Record<string, unknown>;
+  ip: string;
+};
+
+export type UserRow = { username: string; display_name: string; role: Role; active: boolean; last_login: string | null };

@@ -203,3 +203,31 @@ details { margin: 8px 0; font-size: 13.5px; }
 .risklines caption { text-align: left; caption-side: top; padding: 4px 0; }
 .pr__headline { font-size: 11pt; margin: 2px 0 4px; }
 .print-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+
+/* ---------- sign-in, records, history, admin ---------- */
+.top__right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.whoami { display: flex; gap: 10px; align-items: center; font-size: 13.5px; flex-wrap: wrap; justify-content: flex-end; }
+button.link { background: none; border: none; padding: 0; color: var(--accent); text-decoration: underline; cursor: pointer; font: inherit; }
+.login { max-width: 420px; margin: 24px auto; display: flex; flex-direction: column; gap: 10px; }
+.login h2 { margin: 0; }
+.login p { margin: 0; }
+.chip { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; border: 1px solid var(--line); white-space: nowrap; }
+.chip--draft { background: var(--warn-bg); border-color: var(--warn-line); }
+.chip--signed { background: var(--low-bg); border-color: var(--low); color: var(--low); }
+.chip--superseded { color: var(--muted); text-decoration: line-through; }
+.recordbar { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; margin: 10px 0; }
+.recordbar .note { margin: 6px 0 0; }
+.recordbar__actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.table-scroll { overflow-x: auto; max-width: 100%; }
+.history td, .history th { vertical-align: top; }
+.history tr.is-current td { background: var(--warn-bg); }
+td.risk-high { color: var(--high); }
+.row-actions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.row-actions button { font-size: 13px; padding: 4px 10px; }
+.outcome-form { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; background: var(--bg); }
+.filters { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 8px; }
+.filters .field { min-width: 180px; }
+a.button { display: inline-block; text-decoration: none; padding: 8px 14px; border-radius: 8px; border: 1px solid var(--accent); }
+a.button.primary { background: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.nowrap { white-space: nowrap; }
+@media print { .pr__signed { display: block; margin-top: 4px; font-size: 9pt; } }

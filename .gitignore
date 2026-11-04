@@ -5,3 +5,7 @@ __pycache__/
 .venv/
 node_modules/
 dist/
+pe_local.db
+deploy/.env
+deploy/certs/
+deploy/backup.env

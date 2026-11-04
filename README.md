@@ -8,19 +8,18 @@ prints an A4 report for doctors, and stores assessments in an on-premise databas
 > coefficient set is verified against the printed papers, results match the FMF calculator within
 > an agreed tolerance, and Vinmec has approved clinical use. See [docs/coefficients.md](docs/coefficients.md).
 
-Full plan and build draft (scope, model, architecture, database schema, report layout):
-[Preeclampsia Risk Calculator: Plan and Build Draft](https://claude.ai/artifact/3V88CyXtFYyxDFsc1MkDMV).
+Plans: [Plan and Build Draft](https://claude.ai/artifact/3V88CyXtFYyxDFsc1MkDMV) (model, scope, report) and
+[Build and deploy plan](https://claude.ai/artifact/Wmig1H4MJ257rVowTXo4cv) (database, sign-in, deployment, validation).
 
 ## Status
 
 | Phase | What | State |
 | --- | --- | --- |
 | 1 | Risk engine, 11+0 to 13+6 weeks | In review |
-| 2 | Web form and A4 print | In review |
-| 3 | PostgreSQL, sign-in, audit, on-premise package | Not started |
-| 4 | Side-by-side validation with the FMF calculator | Not started |
-| 5 | 19-24, 30-34, 35-37 week modules | Not started |
-| 6 | Outcome capture and calibration audit | Not started |
+| 2 | Web form, charts, formulas and A4 print (VI / EN) | In review |
+| 3 | PostgreSQL, Vinmec sign-in (LDAP), records, sign-off, outcomes, audit log | In review |
+| 4 | Docker deployment on the hospital server | Files ready ([deploy/](deploy/README.md)); waiting for a server |
+| 5 | Validation on Vinmec outcomes, recalibration if needed | Not started (needs ethics approval) |
 
 ## Run the app locally
 
@@ -28,18 +27,22 @@ Full plan and build draft (scope, model, architecture, database schema, report l
 pip install -e engine -e api
 (cd web && npm ci && npm run build)
 uvicorn pe_api.main:app --app-dir api --port 8000
-# open http://localhost:8000
+# open http://localhost:8000 and sign in as sono/sono, doctor/doctor or admin/admin
 ```
 
+Locally the app uses SQLite (`pe_local.db`) and three test accounts (`PE_AUTH_MODE=dev`). In the hospital it
+uses PostgreSQL and Vinmec accounts over LDAP: see [deploy/README.md](deploy/README.md).
 For front-end work, run `npm run dev` in `web/` (it proxies `/api` to port 8000).
-The aspirin cut-off defaults to 1 in 100 for PE <37 weeks; set `PE_CUTOFF_ONE_IN` to change it.
 
-- **Form**: the FMF fields in Vietnamese or English, dating by CRL, LMP, EDD, IVF transfer date or manual GA.
-  BPD and HC are shown but disabled until a chart is chosen.
-- **Results**: risk of PE <32 and <37 weeks, screen result against the cut-off, MoMs, suggested action and technical notes.
-- **Print**: "In báo cáo" opens a one-page A4 bilingual report with patient block, maternal factors,
-  biomarkers, risks, screen result, signature lines, disclaimer and model checksum.
-- Phase 2 stores nothing; the database, sign-in and audit log arrive in phase 3.
+- **Roles:** sonographers screen, save, print and enter outcomes; doctors can also sign; administrators see the
+  audit log, the user list and the de-identified research export, and do not screen.
+- **Records:** a screening is saved with its PID, full inputs, full result and coefficient checksum. A saved
+  screening is never edited: a change is saved as a new version that replaces it. Printing saves first, so every
+  printed report carries a record number.
+- **Outcomes:** delivery date and gestational age, PE yes/no and when, aspirin yes/no, entered per screening.
+- **Audit log:** every sign-in (and failed attempt), view, save, new version, sign, print, outcome and export.
+  On PostgreSQL a trigger makes it append-only.
+- **Sessions** end after 15 idle minutes (`PE_SESSION_IDLE_MINUTES`).
 
 ## Risk engine (`engine/`)
 

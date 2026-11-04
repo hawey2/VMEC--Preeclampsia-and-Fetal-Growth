@@ -11,7 +11,7 @@ from pe_risk.dating import DatingMethod
 
 
 class Patient(BaseModel):
-    """Shown on the printed report only; not stored in phase 2."""
+    """Name and hospital PID. A PID is required to save a screening."""
 
     name: str = ""
     pid: str = ""
