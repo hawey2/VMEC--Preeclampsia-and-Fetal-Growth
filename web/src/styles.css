@@ -117,7 +117,7 @@ details { margin: 8px 0; font-size: 13.5px; }
   .print-report { display: block; color: #000; }
   .print-report h1 { font-size: 14pt; margin: 2px 0 0; }
   .print-report h2 { font-size: 11pt; margin: 0 0 4px; border-bottom: 1px solid #000; padding-bottom: 2px; }
-  .print-report .en { color: #444; font-weight: 400; }
+
   .pr__head { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid #000; padding-bottom: 6px; margin-bottom: 8px; }
   .pr__org { font-size: 9.5pt; font-weight: 600; }
   .pr__meta { text-align: right; font-size: 8.5pt; white-space: nowrap; }
@@ -202,3 +202,4 @@ details { margin: 8px 0; font-size: 13.5px; }
 .headline--high strong { color: var(--high); }
 .risklines caption { text-align: left; caption-side: top; padding: 4px 0; }
 .pr__headline { font-size: 11pt; margin: 2px 0 4px; }
+.print-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }

@@ -61,6 +61,7 @@ const dict = {
   reset: { vi: "Nhập lại", en: "Clear" },
   results: { vi: "Kết quả", en: "Results" },
   print: { vi: "In báo cáo", en: "Print report" },
+  printOther: { vi: "In bản tiếng Anh", en: "Print in Vietnamese" },
   riskOf: { vi: "Nguy cơ tiền sản giật", en: "Risk of preeclampsia" },
   before: { vi: "trước", en: "before" },
   wk: { vi: "tuần", en: "weeks" },

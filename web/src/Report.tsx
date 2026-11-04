@@ -1,5 +1,6 @@
 import { analysers, markerName, t, type Key, type Lang } from "./i18n";
 import type { AssessmentOut, Risk } from "./types";
+import { compactWarnings, msg } from "./messages";
 
 const analyserName: Record<string, string> = Object.fromEntries(analysers);
 
@@ -136,100 +137,92 @@ export function RiskLines({ r, lang }: { r: AssessmentOut; lang: Lang }) {
   );
 }
 
-const both = (k: Key) => (
-  <>
-    {t("vi", k)} <span className="en">/ {t("en", k)}</span>
-  </>
-);
-
-/** One line for all "coefficients not verified" notes so the report stays on one page. */
-function compactWarnings(ws: string[]): string[] {
-  const coef = ws.map((w) => /^Coefficients for '(\w+)' are '(\w+)'/.exec(w)).filter((m): m is RegExpExecArray => !!m);
-  const rest = ws.filter((w) => !/^Coefficients for '/.test(w));
-  if (!coef.length) return rest;
-  return [`Coefficients not verified, not for clinical use: ${coef.map((m) => `${m[1]} (${m[2]})`).join(", ")}.`, ...rest];
-}
-
 type Facts = { label: Key; value: string }[];
 
-export function PrintReport({ r, facts }: { r: AssessmentOut; facts: Facts }) {
+const org: Record<Lang, string> = {
+  vi: "Bệnh viện Vinmec Ocean Park 2 · Khoa Sản",
+  en: "Vinmec Ocean Park 2 Hospital · Department of Obstetrics",
+};
+
+/** One-page A4 report in a single language (the one chosen when printing). */
+export function PrintReport({ r, facts, lang }: { r: AssessmentOut; facts: Facts; lang: Lang }) {
+  const L = (k: Key) => t(lang, k);
+  const head = headlineCombo(r);
   return (
-    <article className="print-report" aria-hidden="true">
+    <article className="print-report" aria-hidden="true" lang={lang}>
       <header className="pr__head">
         <div>
-          <div className="pr__org">Vinmec Ocean Park 2 · Khoa Sản / Department of Obstetrics</div>
-          <h1>{both("appTitle")}</h1>
+          <div className="pr__org">{org[lang]}</div>
+          <h1>{L("appTitle")}</h1>
         </div>
         <div className="pr__meta">
-          <div>{both("examDate")}: {fmtDate(r.exam_date)}</div>
-          <div>{both("printed")}: {r.generated_at.replace("T", " ").slice(0, 16)}</div>
+          <div>{L("examDate")}: {fmtDate(r.exam_date)}</div>
+          <div>{L("printed")}: {r.generated_at.replace("T", " ").slice(0, 16)}</div>
         </div>
       </header>
 
       <section className="pr__patient">
-        <div><span>{both("name")}</span><strong>{r.patient.name || "—"}</strong></div>
+        <div><span>{L("name")}</span><strong>{r.patient.name || "—"}</strong></div>
         <div><span>PID</span><strong>{r.patient.pid || "—"}</strong></div>
-        <div><span>{both("age")}</span><strong>{r.age_years.toFixed(1)}</strong></div>
+        <div><span>{L("age")}</span><strong>{r.age_years.toFixed(1)}</strong></div>
         <div>
-          <span>{both("ga")}</span>
+          <span>{L("ga")}</span>
           <strong>{r.ga_label}</strong> <small>({r.dating_method.toUpperCase()})</small>
         </div>
-        <div><span>EDD</span><strong>{fmtDate(r.edd)}</strong></div>
+        <div><span>{L("edd")}</span><strong>{fmtDate(r.edd)}</strong></div>
+      </section>
+
+      <section className="pr__result">
+        <h2>{L("results")}</h2>
+        <p className="pr__headline">
+          {L("riskBefore37")}: <strong>{comboLabel(lang, head.markers)}: {oneIn(head.risk37 ?? undefined, lang)}</strong>
+        </p>
+        <p className="pr__interp">{RiskInterp(r, lang)}</p>
+        <ScreenBadge r={r} lang={lang} />
+        <RiskTable r={r} lang={lang} />
       </section>
 
       <div className="pr__cols">
         <section>
-          <h2>{both("maternal")}</h2>
+          <h2>{L("maternal")}</h2>
           <dl>
             {facts.map((f) => (
               <div key={f.label}>
-                <dt>{t("vi", f.label)}</dt>
+                <dt>{L(f.label)}</dt>
                 <dd>{f.value}</dd>
               </div>
             ))}
           </dl>
         </section>
         <section>
-          <h2>{both("moms")}</h2>
-          <MomTable r={r} lang="vi" />
+          <h2>{L("moms")}</h2>
+          <MomTable r={r} lang={lang} />
           {!Object.keys(r.moms).length && <p className="muted">—</p>}
           <ul className="pr__extra">
-            {r.bpd && <li>BPD {r.bpd.measured_mm} mm ({t("vi", "median")}: {r.bpd.median_mm.toFixed(1)} mm)</li>}
-            {r.oa_psv_ratio !== null && <li>{t("vi", "oa")}: {r.oa_psv_ratio.toFixed(2)}</li>}
-            {r.map_operator && <li>MAP · {t("vi", "operator")}: {r.map_operator}</li>}
-            {r.utpi_operator && <li>UtA-PI · {t("vi", "operator")}: {r.utpi_operator}</li>}
+            {r.bpd && <li>BPD {r.bpd.measured_mm} mm ({L("median")}: {r.bpd.median_mm.toFixed(1)} mm)</li>}
+            {r.oa_psv_ratio !== null && <li>{L("oa")}: {r.oa_psv_ratio.toFixed(2)}</li>}
+            {r.map_operator && <li>MAP · {L("operator")}: {r.map_operator}</li>}
+            {r.utpi_operator && <li>UtA-PI · {L("operator")}: {r.utpi_operator}</li>}
           </ul>
         </section>
       </div>
 
-      <section className="pr__result">
-        <h2>{both("results")}</h2>
-        <p className="pr__headline">
-          {t("vi", "riskBefore37")} <span className="en">/ {t("en", "riskBefore37")}</span>:{" "}
-          <strong>{comboLabel("en", headlineCombo(r).markers)}: {oneIn(headlineCombo(r).risk37 ?? undefined)}</strong>
-        </p>
-        <p className="pr__interp">{RiskInterp(r, "vi")}<br /><span className="en">{RiskInterp(r, "en")}</span></p>
-        <ScreenBadge r={r} lang="vi" />
-        <RiskTable r={r} lang="vi" />
-      </section>
-
       {r.warnings.length > 0 && (
         <section className="pr__notes">
-          <h2>{both("notes")}</h2>
-          <ul>{compactWarnings(r.warnings).map((w) => <li key={w}>{w}</li>)}</ul>
+          <h2>{L("notes")}</h2>
+          <ul>{compactWarnings(r.warnings).map((w) => <li key={w}>{msg(w, lang)}</li>)}</ul>
         </section>
       )}
 
       <section className="pr__sign">
-        <div><span>{both("measuredBy")}</span></div>
-        <div><span>{both("doctor")}</span></div>
+        <div><span>{L("measuredBy")}</span></div>
+        <div><span>{L("doctor")}</span></div>
       </section>
 
       <footer className="pr__foot">
-        <p>{t("vi", "disclaimer")}</p>
-        <p className="en">{t("en", "disclaimer")}</p>
+        <p>{L("disclaimer")}</p>
         <p className="pr__model">
-          {both("model")}: {r.model_label} · SHA-256 {r.model_checksum.slice(0, 16)}
+          {L("model")}: {r.model_label} · SHA-256 {r.model_checksum.slice(0, 16)}
         </p>
       </footer>
     </article>

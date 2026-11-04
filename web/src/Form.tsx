@@ -292,7 +292,7 @@ export function AssessmentForm({ lang, f, set, missing, result }: Props) {
               <FieldBox label="PSV 2" bad={false}>{oaCell(3, "left PSV 2")}{unit("cm/s")}</FieldBox>
             </div>
           </div>
-          <FieldBox label={L("oa")} bad={false} hint="mean of PSV2 / PSV1">
+          <FieldBox label={L("oa")} bad={false} hint={lang === "vi" ? "trung bình PSV2 / PSV1" : "mean of PSV2 / PSV1"}>
             <input value={fmt(oaLive, 2)} readOnly aria-readonly="true" />
           </FieldBox>
           <p className="hint-line">{L("oaNote")}</p>

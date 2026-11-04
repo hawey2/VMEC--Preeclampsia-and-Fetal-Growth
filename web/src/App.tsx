@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from "react";
+import { flushSync } from "react-dom";
+import { msg } from "./messages";
 import { assess, buildRequest } from "./api";
 import { AssessmentForm } from "./Form";
 import { conceptions, ethnicities, t, type Key, type Lang } from "./i18n";
@@ -26,29 +28,31 @@ const EMPTY: FormState = {
   plgf_date: "", plgf_pg_ml: "", plgf_analyser: "cobas_e411", plgf_mom: "",
 };
 
-const pick = (list: [string, string, string][], v: string) => list.find((x) => x[0] === v)?.[1] ?? v;
+const pick = (list: [string, string, string][], v: string, lang: Lang) =>
+  list.find((x) => x[0] === v)?.[lang === "vi" ? 1 : 2] ?? v;
 
-function facts(f: FormState): { label: Key; value: string }[] {
-  const yn = (b: boolean) => (b ? "Có" : "Không");
+function facts(f: FormState, lang: Lang): { label: Key; value: string }[] {
+  const L = (k: Key) => t(lang, k);
+  const yn = (v: string) => L(v === "yes" ? "yes" : "no");
   const out: { label: Key; value: string }[] = [
     { label: "height", value: `${f.height_cm} cm` },
     { label: "weight", value: `${f.weight_kg} kg` },
-    { label: "ethnicity", value: pick(ethnicities, f.ethnicity) },
-    { label: "smoker", value: yn(f.smoker === "yes") },
-    { label: "conception", value: pick(conceptions, f.conception) },
-    { label: "parity", value: f.parity === "parous" ? "Đã sinh" : "Chưa sinh" },
+    { label: "ethnicity", value: pick(ethnicities, f.ethnicity, lang) },
+    { label: "smoker", value: yn(f.smoker) },
+    { label: "conception", value: pick(conceptions, f.conception, lang) },
+    { label: "parity", value: L(f.parity === "parous" ? "parous" : "nulliparous") },
   ];
   if (f.parity === "parous") {
-    out.push({ label: "prevPe", value: yn(f.prev_pe === "yes") });
-    out.push({ label: "prevGa", value: `${f.prev_ga_weeks} tuần` });
+    out.push({ label: "prevPe", value: yn(f.prev_pe) });
+    out.push({ label: "prevGa", value: `${f.prev_ga_weeks} ${L("weeks")}` });
   }
   out.push(
-    { label: "chronicHtn", value: yn(f.htn === "yes") },
-    { label: "dm1", value: yn(f.dm1 === "yes") },
-    { label: "dm2", value: f.dm2 === "yes" ? (f.dm2_insulin === "yes" ? "Có (insulin)" : "Có") : "Không" },
-    { label: "sleOnly", value: yn(f.sle === "yes") },
-    { label: "apsOnly", value: yn(f.aps === "yes") },
-    { label: "famPe", value: yn(f.fam_pe === "yes") },
+    { label: "chronicHtn", value: yn(f.htn) },
+    { label: "dm1", value: yn(f.dm1) },
+    { label: "dm2", value: f.dm2 === "yes" && f.dm2_insulin === "yes" ? `${L("yes")} (insulin)` : yn(f.dm2) },
+    { label: "sleOnly", value: yn(f.sle) },
+    { label: "apsOnly", value: yn(f.aps) },
+    { label: "famPe", value: yn(f.fam_pe) },
   );
   return out;
 }
@@ -113,6 +117,14 @@ export default function App() {
     };
   }, [f]);
 
+  // The printed report is in one language: the screen language, or the other one on request.
+  const [printLang, setPrintLang] = useState<Lang | null>(null);
+  const printIn = (l: Lang) => {
+    flushSync(() => setPrintLang(l));
+    window.print();
+    setPrintLang(null);
+  };
+
   const calculate = async () => {
     setError("");
     let body: unknown;
@@ -131,7 +143,7 @@ export default function App() {
       setSubmitted(f);
       requestAnimationFrame(() => resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
     } catch (e) {
-      setError(`${L("error")}: ${(e as Error).message}`);
+      setError(`${L("error")}: ${msg((e as Error).message, lang)}`);
     } finally {
       setBusy(false);
     }
@@ -169,7 +181,10 @@ export default function App() {
           <section className="card results" ref={resultRef} aria-live="polite">
             <div className="results__head">
               <h2>{L("results")}</h2>
-              <button type="button" className="primary" onClick={() => window.print()}>{L("print")}</button>
+              <div className="print-actions">
+                <button type="button" className="primary" onClick={() => printIn(lang)}>{L("print")}</button>
+                <button type="button" onClick={() => printIn(lang === "vi" ? "en" : "vi")}>{L("printOther")}</button>
+              </div>
             </div>
             <p className="muted">
               {L("ga")} {result.ga_label} ({L("dating")} {result.dating_method.toUpperCase()}) · {L("age")} {result.age_years.toFixed(1)} {L("years")}
@@ -185,7 +200,7 @@ export default function App() {
             {result.warnings.length > 0 && (
               <details>
                 <summary>{L("notes")} ({result.warnings.length})</summary>
-                <ul>{result.warnings.map((w) => <li key={w}>{w}</li>)}</ul>
+                <ul>{result.warnings.map((w) => <li key={w}>{msg(w, lang)}</li>)}</ul>
               </details>
             )}
             <p className="muted small">{L("disclaimer")}</p>
@@ -195,7 +210,7 @@ export default function App() {
         {result && submitted && <HowItWorks r={result} f={submitted} lang={lang} />}
         <Info lang={lang} />
       </div>
-      {result && submitted && <PrintReport r={result} facts={facts(submitted)} />}
+      {result && submitted && <PrintReport r={result} facts={facts(submitted, printLang ?? lang)} lang={printLang ?? lang} />}
     </>
   );
 }
