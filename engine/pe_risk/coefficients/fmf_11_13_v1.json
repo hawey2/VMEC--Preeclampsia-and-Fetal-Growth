@@ -1,0 +1,211 @@
+{
+  "label": "fmf-11-13-v1",
+  "window": "11+0 to 13+6 weeks",
+  "description": "FMF competing-risks model for preeclampsia at 11-13 weeks, transcribed from published papers. NOT the FMF website algorithm.",
+  "verification_levels": {
+    "verified": "Transcribed and checked by a second person against the printed paper.",
+    "transcribed": "Transcribed from the paper by one person; needs a second-person check before clinical use.",
+    "transcribed_signs_inferred": "Numbers transcribed; one or more signs inferred from confidence intervals or text because the source extraction lost minus signs. Must be checked against the printed table.",
+    "missing": "Not available in any source we could access. The component is disabled until filled.",
+    "secondary_source": "Taken from a secondary source (another implementation) because the primary paper could not be read; that implementation agrees with the FMF online calculator. Must be checked against the primary paper before clinical use."
+  },
+  "prior": {
+    "verification": "transcribed_signs_inferred",
+    "source": "Wright D, Syngelaki A, Akolekar R, Poon LC, Nicolaides KH. Am J Obstet Gynecol 2015;213:62.e1-10, Table 2. doi:10.1016/j.ajog.2015.02.018",
+    "notes": [
+      "Mean gestational age (weeks) at delivery with PE; Gaussian with fixed SD.",
+      "Signs inferred from 95% CIs: e.g. chronic hypertension CI -7.87 to -6.71 is stated as -7.3 in the text.",
+      "Interval powers read as interval^-1 and interval^-0.5 (fractional polynomial); positive powers give implausible results and contradict the paper's text that the protective effect falls with longer intervals.",
+      "Reference group: White, nulliparous, spontaneous conception, weight 69 kg, height 164 cm, no medical or family history. East Asian has no separate term in this model."
+    ],
+    "intercept": 54.3637,
+    "sd": 6.8833,
+    "age_over_35_per_year": -0.206886,
+    "height_minus_164_per_cm": 0.11711,
+    "ethnicity": {
+      "white": 0.0,
+      "afro_caribbean": -2.6786,
+      "south_asian": -1.129,
+      "east_asian": 0.0,
+      "mixed": 0.0
+    },
+    "chronic_hypertension": -7.2897,
+    "sle_or_aps": -3.0519,
+    "ivf": -1.6327,
+    "parous_previous_pe": {
+      "intercept": -8.1667,
+      "prev_ga_minus_24_squared": 0.0271988
+    },
+    "parous_no_previous_pe": {
+      "intercept": -4.335,
+      "interval_years_pow_minus_1": -4.15137651,
+      "interval_years_pow_minus_0_5": 9.21473572,
+      "prev_ga_minus_24_squared": 0.01549673
+    },
+    "without_chronic_hypertension": {
+      "weight_minus_69_per_kg": -0.0694096,
+      "family_history_pe": -1.7154,
+      "diabetes_type1_or_2": -3.3899
+    },
+    "implementation_choices": {
+      "min_interval_years": 0.25,
+      "why": "The fractional polynomial diverges as the interval approaches zero; the paper does not say how FMF bounds it. Needs validation against the FMF calculator."
+    }
+  },
+  "mom": {
+    "verification": "transcribed",
+    "source": "Tan MY et al. Ultrasound Obstet Gynecol 2018;52:186-195, Appendix 1 (formulas for MoM at 11-13 weeks). doi:10.1002/uog.19112. The appendix states these are default parameters whose suitability should be checked before use.",
+    "notes": [
+      "Each model gives log10 of the expected median; MoM = observed / 10^(expected).",
+      "ga = gestational age in days minus 77. Weight in kg minus 69, height in cm minus 164, age in years minus 35.",
+      "Diabetes type 2 not treated with insulin has no PlGF term in the appendix."
+    ],
+    "map": {
+      "intercept": 1.9364,
+      "ga": 0.000428017,
+      "ga_squared": -2.8811e-05,
+      "weight": 0.0012053,
+      "weight_squared": -9.28e-06,
+      "height": -0.00018157,
+      "ethnicity": {
+        "afro_caribbean": -0.00393
+      },
+      "smoker": -0.00864,
+      "chronic_hypertension": 0.05363,
+      "chronic_hypertension_x_weight": -0.00023975,
+      "diabetes_type1": 0.00437,
+      "diabetes_type2_insulin": 0.00437,
+      "diabetes_type2_no_insulin": 0.00437,
+      "family_history_pe": 0.00624,
+      "parous_no_previous_pe": -0.00663,
+      "parous_no_previous_pe_x_interval_minus_2": 0.00082639,
+      "parous_previous_pe": 0.00857
+    },
+    "utpi": {
+      "intercept": 0.26457,
+      "ga": -0.004838365,
+      "weight": -0.00087443,
+      "weight_squared": 7.33e-06,
+      "age": -0.00064175,
+      "ethnicity": {
+        "afro_caribbean": 0.02162,
+        "east_asian": 0.00763,
+        "mixed": 0.01199
+      },
+      "diabetes_type1": -0.02749,
+      "parous_no_previous_pe": -0.00295,
+      "parous_previous_pe": 0.00965
+    },
+    "plgf": {
+      "intercept_by_analyser": {
+        "delfia_xpress": 1.332959332,
+        "cobas_e411": 1.542535524,
+        "kryptor": 1.430615169
+      },
+      "ga": 0.012263018,
+      "ga_squared": 0.000149743,
+      "weight": -0.001682761,
+      "weight_squared": 8.78e-06,
+      "age": 0.002174191,
+      "ethnicity": {
+        "afro_caribbean": 0.193561059,
+        "south_asian": 0.072679108,
+        "east_asian": 0.034550109,
+        "mixed": 0.079010576
+      },
+      "smoker": 0.160836176,
+      "diabetes_type1": -0.029630891,
+      "diabetes_type2_insulin": -0.039984195,
+      "ivf": -0.022250585,
+      "parous_no_previous_pe": 0.02075005
+    }
+  },
+  "likelihood": {
+    "verification": "secondary_source",
+    "source": "Regression of mean log10 MoM on gestational age at delivery with PE (mean = b0 + b1*GA, 0 when GA >= -b0/b1), covariance of log10 MoM, and log10 MoM truncation limits, as given in the PERiskProfileR 'Details' vignette (A. Jarmund, https://github.com/andjar/PERiskProfileR, GPL-3.0). Its validation article reports agreement with the FMF online calculator at the 1 in 100 cut-off in 4986 of 5000 simulated cases. Primary source believed to be O'Gorman N et al. Am J Obstet Gynecol 2016;214:103.e1-12, doi:10.1016/j.ajog.2015.08.034 (not read).",
+    "markers": {
+      "map": {
+        "b0": 0.088997,
+        "b1_per_week": -0.0016711
+      },
+      "utpi": {
+        "b0": 0.5861,
+        "b1_per_week": -0.014233
+      },
+      "plgf": {
+        "b0": -0.92352,
+        "b1_per_week": 0.021584
+      }
+    },
+    "covariance": {
+      "order": [
+        "map",
+        "utpi",
+        "plgf"
+      ],
+      "matrix": [
+        [
+          0.00141396,
+          -0.0002726,
+          -0.0001907
+        ],
+        [
+          -0.0002726,
+          0.01630906,
+          -0.0034539
+        ],
+        [
+          -0.0001907,
+          -0.0034539,
+          0.03147225
+        ]
+      ],
+      "sd": [
+        0.037603,
+        0.127707,
+        0.177404
+      ],
+      "correlation": [
+        [
+          1.0,
+          -0.056767,
+          -0.028587
+        ],
+        [
+          -0.056767,
+          1.0,
+          -0.152451
+        ],
+        [
+          -0.028587,
+          -0.152451,
+          1.0
+        ]
+      ]
+    }
+  },
+  "truncation": {
+    "verification": "secondary_source",
+    "source": "log10 MoM limits from the same PERiskProfileR vignette (MAP +/-0.12240759, UtA-PI +/-0.42161519, PlGF +/-0.56550992), converted to MoM.",
+    "map": [
+      0.7544,
+      1.3256
+    ],
+    "utpi": [
+      0.3788,
+      2.6401
+    ],
+    "plgf": [
+      0.272,
+      3.6771
+    ]
+  },
+  "dating": {
+    "verification": "transcribed",
+    "source": "Robinson HP, Fleming JE. Br J Obstet Gynaecol 1975;82:702-710. GA (days) = 8.052 * sqrt(CRL mm) + 23.73.",
+    "crl_mm_range": [
+      45.0,
+      84.0
+    ]
+  }
+}
