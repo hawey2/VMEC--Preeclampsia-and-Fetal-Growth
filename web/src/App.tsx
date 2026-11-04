@@ -1,0 +1,162 @@
+import { useEffect, useRef, useState } from "react";
+import { assess, buildRequest } from "./api";
+import { AssessmentForm } from "./Form";
+import { conceptions, diabetesTypes, ethnicities, t, type Key, type Lang } from "./i18n";
+import { MomTable, PrintReport, RiskTable, ScreenBadge } from "./Report";
+import type { AssessmentOut, FormState } from "./types";
+
+const today = () => {
+  const d = new Date();
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+};
+
+const EMPTY: FormState = {
+  name: "", pid: "", exam_date: today(), date_of_birth: "", height_cm: "", weight_kg: "",
+  ethnicity: "east_asian", smoker: "", dating_method: "crl", crl_mm: "", lmp: "", edd: "",
+  transfer_date: "", embryo_age_days: "5", weeks: "", days: "", vanishing_twin: "no",
+  conception: "spontaneous", parity: "", prev_pe: "", prev_ga_weeks: "", prev_delivery_date: "",
+  chronic_hypertension: false, diabetes: "none", sle_or_aps: false, family_history_pe: false,
+  map_mode: "readings", bp: Array(8).fill(""), map_mmhg: "", map_mom: "",
+  utpi_mode: "raw", utpi_left: "", utpi_right: "", utpi_mom: "",
+  plgf_mode: "raw", plgf_pg_ml: "", plgf_analyser: "cobas_e411", plgf_mom: "",
+};
+
+const pick = (list: [string, string, string][], v: string) => list.find((x) => x[0] === v)?.[1] ?? v;
+
+function facts(f: FormState): { label: Key; value: string }[] {
+  const yn = (b: boolean) => (b ? "Có" : "Không");
+  const out: { label: Key; value: string }[] = [
+    { label: "height", value: `${f.height_cm} cm` },
+    { label: "weight", value: `${f.weight_kg} kg` },
+    { label: "ethnicity", value: pick(ethnicities, f.ethnicity) },
+    { label: "smoker", value: yn(f.smoker === "yes") },
+    { label: "conception", value: pick(conceptions, f.conception) },
+    { label: "parity", value: f.parity === "parous" ? "Đã sinh" : "Chưa sinh" },
+  ];
+  if (f.parity === "parous") {
+    out.push({ label: "prevPe", value: yn(f.prev_pe === "yes") });
+    out.push({ label: "prevGa", value: `${f.prev_ga_weeks} tuần` });
+  }
+  out.push(
+    { label: "chronicHtn", value: yn(f.chronic_hypertension) },
+    { label: "diabetes", value: pick(diabetesTypes, f.diabetes) },
+    { label: "sle", value: yn(f.sle_or_aps) },
+    { label: "famPe", value: yn(f.family_history_pe) },
+  );
+  return out;
+}
+
+export default function App() {
+  const [lang, setLang] = useState<Lang>(() => {
+    try {
+      return (localStorage.getItem("pe-lang") as Lang) || "vi";
+    } catch {
+      return "vi";
+    }
+  });
+  const [f, setF] = useState<FormState>(EMPTY);
+  const [missing, setMissing] = useState<string[]>([]);
+  const [result, setResult] = useState<AssessmentOut | null>(null);
+  const [submitted, setSubmitted] = useState<FormState | null>(null);
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const resultRef = useRef<HTMLElement>(null);
+  const L = (k: Key) => t(lang, k);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("pe-lang", lang);
+    } catch {
+      /* private mode: language just isn't remembered */
+    }
+    document.documentElement.lang = lang;
+  }, [lang]);
+
+  const set = (patch: Partial<FormState>) => {
+    setF((prev) => ({ ...prev, ...patch }));
+    setResult(null);
+  };
+
+  const calculate = async () => {
+    setError("");
+    let body: unknown;
+    try {
+      body = buildRequest(f);
+    } catch (m) {
+      setMissing(m as string[]);
+      setError(`${L("required")}: ${(m as Key[]).map((k) => L(k)).join(", ")}`);
+      return;
+    }
+    setMissing([]);
+    setBusy(true);
+    try {
+      const r = await assess(body);
+      setResult(r);
+      setSubmitted(f);
+      requestAnimationFrame(() => resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
+    } catch (e) {
+      setError(`${L("error")}: ${(e as Error).message}`);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <>
+      <div className="app">
+        <header className="top">
+          <div>
+            <h1>{L("appTitle")}</h1>
+            <p className="muted">{L("appSub")}</p>
+          </div>
+          <div className="seg seg--small" role="group" aria-label="Language">
+            <button type="button" className={lang === "vi" ? "seg__on" : ""} onClick={() => setLang("vi")}>VI</button>
+            <button type="button" className={lang === "en" ? "seg__on" : ""} onClick={() => setLang("en")}>EN</button>
+          </div>
+        </header>
+
+        <div className="banner" role="note">{L("notClinical")}</div>
+
+        <AssessmentForm lang={lang} f={f} set={set} missing={missing} />
+
+        <div className="actions">
+          <button type="button" className="primary" onClick={calculate} disabled={busy}>
+            {busy ? "…" : L("calculate")}
+          </button>
+          <button type="button" onClick={() => { setF({ ...EMPTY, exam_date: today() }); setResult(null); setMissing([]); setError(""); }}>
+            {L("reset")}
+          </button>
+          {error && <p className="error" role="alert">{error}</p>}
+        </div>
+
+        {result && (
+          <section className="card results" ref={resultRef} aria-live="polite">
+            <div className="results__head">
+              <h2>{L("results")}</h2>
+              <button type="button" className="primary" onClick={() => window.print()}>{L("print")}</button>
+            </div>
+            <p className="muted">
+              {L("ga")} {result.ga_label} ({L("dating")} {result.dating_method.toUpperCase()}) · {L("age")} {result.age_years.toFixed(1)} {L("years")}
+            </p>
+            <ScreenBadge r={result} lang={lang} />
+            <RiskTable r={result} lang={lang} />
+            {!result.combined && Object.keys(result.moms).length > 0 && <p className="note">{L("combinedMissing")}</p>}
+            <MomTable r={result} lang={lang} />
+            <p>
+              <strong>{L("action")}:</strong> {result.screen.high_risk ? L("actionHigh") : L("actionLow")}
+            </p>
+            {result.warnings.length > 0 && (
+              <details>
+                <summary>{L("notes")} ({result.warnings.length})</summary>
+                <ul>{result.warnings.map((w) => <li key={w}>{w}</li>)}</ul>
+              </details>
+            )}
+            <p className="muted small">{L("disclaimer")}</p>
+          </section>
+        )}
+      </div>
+      {result && submitted && <PrintReport r={result} facts={facts(submitted)} />}
+    </>
+  );
+}

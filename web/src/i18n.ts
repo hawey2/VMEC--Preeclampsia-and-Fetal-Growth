@@ -1,0 +1,144 @@
+export type Lang = "vi" | "en";
+
+const dict = {
+  appTitle: { vi: "Đánh giá nguy cơ tiền sản giật", en: "Preeclampsia risk assessment" },
+  appSub: { vi: "Sàng lọc 11+0 – 13+6 tuần · Khoa Sản, Vinmec Ocean Park 2", en: "Screening at 11+0 to 13+6 weeks · Obstetrics, Vinmec Ocean Park 2" },
+  notClinical: {
+    vi: "Bản thử nghiệm. Không dùng để quyết định điều trị cho đến khi mô hình được kiểm định.",
+    en: "Research build. Do not use for treatment decisions until the model is validated.",
+  },
+  patient: { vi: "Bệnh nhân", en: "Patient" },
+  name: { vi: "Họ tên", en: "Full name" },
+  pid: { vi: "Mã bệnh nhân (PID)", en: "Patient ID (PID)" },
+  maternal: { vi: "Đặc điểm người mẹ", en: "Maternal characteristics" },
+  dob: { vi: "Ngày sinh", en: "Date of birth" },
+  height: { vi: "Chiều cao", en: "Height" },
+  weight: { vi: "Cân nặng", en: "Weight" },
+  ethnicity: { vi: "Chủng tộc", en: "Ethnicity" },
+  smoker: { vi: "Hiện đang hút thuốc", en: "Currently smoking" },
+  yes: { vi: "Có", en: "Yes" },
+  no: { vi: "Không", en: "No" },
+  pregnancy: { vi: "Thai kỳ hiện tại", en: "Current pregnancy" },
+  datingMethod: { vi: "Phương pháp tính tuổi thai", en: "Method of dating" },
+  crl: { vi: "Chiều dài đầu mông (CRL)", en: "Crown-rump length (CRL)" },
+  lmp: { vi: "Kỳ kinh cuối (LMP)", en: "Last menstrual period" },
+  edd: { vi: "Ngày dự sinh (EDD)", en: "Expected delivery date" },
+  transfer: { vi: "Ngày chuyển phôi", en: "Embryo transfer date" },
+  embryoAge: { vi: "Tuổi phôi khi chuyển", en: "Embryo age at transfer" },
+  gaManual: { vi: "Tuổi thai", en: "Gestational age" },
+  weeks: { vi: "tuần", en: "weeks" },
+  days: { vi: "ngày", en: "days" },
+  vanishingTwin: { vi: "Song thai tiêu biến", en: "Vanishing twin" },
+  conception: { vi: "Phương pháp thụ thai", en: "Conception method" },
+  examDate: { vi: "Ngày khám", en: "Examination date" },
+  history: { vi: "Tiền sử sản khoa", en: "Obstetric history" },
+  parity: { vi: "Số lần sinh", en: "Parity" },
+  nulliparous: { vi: "Chưa sinh lần nào (≥24 tuần)", en: "Nulliparous (no delivery ≥24 w)" },
+  parous: { vi: "Đã sinh (≥24 tuần)", en: "Parous (delivered ≥24 w)" },
+  prevPe: { vi: "Tiền sản giật ở lần sinh trước", en: "Preeclampsia in last pregnancy" },
+  prevGa: { vi: "Tuổi thai khi sinh lần trước", en: "GA at last delivery" },
+  prevDate: { vi: "Ngày sinh lần trước", en: "Date of last delivery" },
+  medical: { vi: "Tiền sử bệnh", en: "Medical history" },
+  chronicHtn: { vi: "Tăng huyết áp mạn", en: "Chronic hypertension" },
+  diabetes: { vi: "Đái tháo đường", en: "Diabetes mellitus" },
+  sle: { vi: "Lupus (SLE) hoặc hội chứng kháng phospholipid", en: "SLE or antiphospholipid syndrome" },
+  famPe: { vi: "Mẹ của sản phụ bị tiền sản giật", en: "Mother of the patient had preeclampsia" },
+  biomarkers: { vi: "Chỉ số sinh học", en: "Biomarkers" },
+  map: { vi: "Huyết áp động mạch trung bình (MAP)", en: "Mean arterial pressure (MAP)" },
+  mapReadings: { vi: "4 lần đo (2 mỗi tay)", en: "4 readings (2 per arm)" },
+  mapValue: { vi: "Giá trị MAP", en: "MAP value" },
+  momValue: { vi: "MoM từ xét nghiệm", en: "MoM from lab" },
+  rightArm: { vi: "Tay phải", en: "Right arm" },
+  leftArm: { vi: "Tay trái", en: "Left arm" },
+  utpi: { vi: "PI động mạch tử cung (UtA-PI)", en: "Uterine artery PI (UtA-PI)" },
+  left: { vi: "Trái", en: "Left" },
+  right: { vi: "Phải", en: "Right" },
+  raw: { vi: "Giá trị đo", en: "Measured value" },
+  plgf: { vi: "PlGF huyết thanh", en: "Serum PlGF" },
+  analyser: { vi: "Máy xét nghiệm", en: "Analyser" },
+  optional: { vi: "không bắt buộc", en: "optional" },
+  calculate: { vi: "Tính nguy cơ", en: "Calculate" },
+  reset: { vi: "Nhập lại", en: "Clear" },
+  results: { vi: "Kết quả", en: "Results" },
+  print: { vi: "In báo cáo", en: "Print report" },
+  riskOf: { vi: "Nguy cơ tiền sản giật", en: "Risk of preeclampsia" },
+  before: { vi: "trước", en: "before" },
+  wk: { vi: "tuần", en: "weeks" },
+  mfOnly: { vi: "Theo yếu tố mẹ", en: "Maternal factors" },
+  combined: { vi: "Kết hợp chỉ số sinh học", en: "With biomarkers" },
+  notAvailable: { vi: "Chưa có", en: "Not available" },
+  combinedMissing: {
+    vi: "Chưa thể kết hợp chỉ số sinh học: thiếu tham số đã công bố (O'Gorman 2016). Kết quả chỉ dựa trên yếu tố mẹ.",
+    en: "Biomarkers cannot be combined yet: published parameters (O'Gorman 2016) are missing. Result uses maternal factors only.",
+  },
+  highRisk: { vi: "NGUY CƠ CAO", en: "HIGH RISK" },
+  lowRisk: { vi: "NGUY CƠ THẤP", en: "LOW RISK" },
+  screenBasis: { vi: "Ngưỡng nguy cơ tiền sản giật <37 tuần", en: "Cut-off for preeclampsia <37 weeks" },
+  mfBasisNote: { vi: "chỉ dựa trên yếu tố mẹ", en: "maternal factors only" },
+  action: { vi: "Gợi ý theo quy trình khoa", en: "Suggested action (department policy)" },
+  actionHigh: {
+    vi: "Cân nhắc aspirin 150 mg mỗi tối từ khi có kết quả đến 36 tuần (thử nghiệm ASPRE). Bác sĩ quyết định.",
+    en: "Consider aspirin 150 mg nightly from now until 36 weeks (ASPRE trial). Doctor to decide.",
+  },
+  actionLow: { vi: "Chăm sóc tiền sản thường quy.", en: "Routine antenatal care." },
+  moms: { vi: "Chỉ số và MoM", en: "Measurements and MoMs" },
+  marker: { vi: "Chỉ số", en: "Marker" },
+  value: { vi: "Giá trị", en: "Value" },
+  notes: { vi: "Lưu ý kỹ thuật", en: "Technical notes" },
+  model: { vi: "Mô hình", en: "Model" },
+  printed: { vi: "Thời gian tạo", en: "Generated" },
+  measuredBy: { vi: "Người đo", en: "Measured by" },
+  doctor: { vi: "Bác sĩ ký tên", en: "Signing doctor" },
+  age: { vi: "Tuổi", en: "Age" },
+  ga: { vi: "Tuổi thai", en: "GA" },
+  dating: { vi: "tính theo", en: "by" },
+  years: { vi: "tuổi", en: "years" },
+  disclaimer: {
+    vi: "Báo cáo này là ước tính hỗ trợ quyết định dựa trên các nghiên cứu đã công bố của The Fetal Medicine Foundation, không phải chẩn đoán và không thay thế đánh giá lâm sàng. Độ chính xác phụ thuộc vào việc đo bởi nhân viên được đào tạo và phương pháp xét nghiệm đã kiểm định. Mô hình chưa được hiệu chỉnh trên quần thể Vinmec.",
+    en: "This report is a decision-support estimate based on published research by The Fetal Medicine Foundation. It is not a diagnosis and does not replace clinical judgement. Accuracy depends on measurements taken by trained, audited staff and on validated laboratory methods. The model has not yet been calibrated on the Vinmec population.",
+  },
+  required: { vi: "Vui lòng điền", en: "Please fill in" },
+  error: { vi: "Không tính được", en: "Could not calculate" },
+} as const;
+
+export type Key = keyof typeof dict;
+export const t = (lang: Lang, k: Key) => dict[k][lang];
+
+export const ethnicities: [string, string, string][] = [
+  ["east_asian", "Đông Á (Việt Nam, Trung Quốc, Nhật…)", "East Asian (incl. Vietnamese)"],
+  ["white", "Da trắng", "White"],
+  ["south_asian", "Nam Á", "South Asian"],
+  ["afro_caribbean", "Gốc Phi / Caribe", "Black (Afro-Caribbean)"],
+  ["mixed", "Lai", "Mixed"],
+];
+
+export const datingMethods: [string, string, string, boolean][] = [
+  ["crl", "CRL", "CRL", true],
+  ["lmp", "Kỳ kinh cuối (LMP)", "LMP", true],
+  ["edd", "Ngày dự sinh (EDD)", "EDD", true],
+  ["ivf", "Ngày chuyển phôi (IVF)", "IVF transfer date", true],
+  ["manual", "Nhập tay", "Manual", true],
+  ["bpd", "BPD (chưa hỗ trợ)", "BPD (not yet supported)", false],
+  ["hc", "HC (chưa hỗ trợ)", "HC (not yet supported)", false],
+];
+
+export const conceptions: [string, string, string][] = [
+  ["spontaneous", "Tự nhiên", "Spontaneous"],
+  ["ovulation_drugs", "Thuốc kích trứng", "Ovulation drugs"],
+  ["ivf", "Thụ tinh trong ống nghiệm (IVF)", "In vitro fertilisation"],
+];
+
+export const diabetesTypes: [string, string, string][] = [
+  ["none", "Không", "No"],
+  ["type1", "Type 1", "Type 1"],
+  ["type2_insulin", "Type 2, dùng insulin", "Type 2, on insulin"],
+  ["type2_no_insulin", "Type 2, không dùng insulin", "Type 2, no insulin"],
+];
+
+export const analysers: [string, string][] = [
+  ["cobas_e411", "Roche Cobas e411 (Elecsys)"],
+  ["kryptor", "Thermo Fisher BRAHMS Kryptor"],
+  ["delfia_xpress", "Revvity DELFIA Xpress"],
+];
+
+export const markerName: Record<string, string> = { map: "MAP", utpi: "UtA-PI", plgf: "PlGF" };

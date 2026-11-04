@@ -16,11 +16,30 @@ Full plan and build draft (scope, model, architecture, database schema, report l
 | Phase | What | State |
 | --- | --- | --- |
 | 1 | Risk engine, 11+0 to 13+6 weeks | In review |
-| 2 | Web form and A4 print | Not started |
+| 2 | Web form and A4 print | In review |
 | 3 | PostgreSQL, sign-in, audit, on-premise package | Not started |
 | 4 | Side-by-side validation with the FMF calculator | Not started |
 | 5 | 19-24, 30-34, 35-37 week modules | Not started |
 | 6 | Outcome capture and calibration audit | Not started |
+
+## Run the app locally
+
+```bash
+pip install -e engine -e api
+(cd web && npm ci && npm run build)
+uvicorn pe_api.main:app --app-dir api --port 8000
+# open http://localhost:8000
+```
+
+For front-end work, run `npm run dev` in `web/` (it proxies `/api` to port 8000).
+The aspirin cut-off defaults to 1 in 100 for PE <37 weeks; set `PE_CUTOFF_ONE_IN` to change it.
+
+- **Form**: the FMF fields in Vietnamese or English, dating by CRL, LMP, EDD, IVF transfer date or manual GA.
+  BPD and HC are shown but disabled until a chart is chosen.
+- **Results**: risk of PE <32 and <37 weeks, screen result against the cut-off, MoMs, suggested action and technical notes.
+- **Print**: "In báo cáo" opens a one-page A4 bilingual report with patient block, maternal factors,
+  biomarkers, risks, screen result, signature lines, disclaimer and model checksum.
+- Phase 2 stores nothing; the database, sign-in and audit log arrive in phase 3.
 
 ## Risk engine (`engine/`)
 
