@@ -3,7 +3,7 @@ import { flushSync } from "react-dom";
 import { msg } from "./messages";
 import { assess, buildRequest } from "./api";
 import { AssessmentForm } from "./Form";
-import { conceptions, ethnicities, t, type Key, type Lang } from "./i18n";
+import { loc, t, type Key, type Lang } from "./i18n";
 import { MomTable, PrintReport, RiskLines, RiskTable, ScreenBadge } from "./Report";
 import { Charts } from "./Charts";
 import { HowItWorks } from "./How";
@@ -28,8 +28,7 @@ const EMPTY: FormState = {
   plgf_date: "", plgf_pg_ml: "", plgf_analyser: "cobas_e411", plgf_mom: "",
 };
 
-const pick = (list: [string, string, string][], v: string, lang: Lang) =>
-  list.find((x) => x[0] === v)?.[lang === "vi" ? 1 : 2] ?? v;
+const pick = (list: [string, string][], v: string) => list.find((x) => x[0] === v)?.[1] ?? v;
 
 function facts(f: FormState, lang: Lang): { label: Key; value: string }[] {
   const L = (k: Key) => t(lang, k);
@@ -37,9 +36,9 @@ function facts(f: FormState, lang: Lang): { label: Key; value: string }[] {
   const out: { label: Key; value: string }[] = [
     { label: "height", value: `${f.height_cm} cm` },
     { label: "weight", value: `${f.weight_kg} kg` },
-    { label: "ethnicity", value: pick(ethnicities, f.ethnicity, lang) },
+    { label: "ethnicity", value: pick(loc(lang).ethnicities, f.ethnicity) },
     { label: "smoker", value: yn(f.smoker) },
-    { label: "conception", value: pick(conceptions, f.conception, lang) },
+    { label: "conception", value: pick(loc(lang).conceptions, f.conception) },
     { label: "parity", value: L(f.parity === "parous" ? "parous" : "nulliparous") },
   ];
   if (f.parity === "parous") {

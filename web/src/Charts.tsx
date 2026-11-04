@@ -54,7 +54,7 @@ function CurveChart({ id, title, unit, curve, point, log, yTicks, lang, note }: 
               <text x={X(d)} y={H - M.b + 16} textAnchor="middle">{d / 7}</text>
             </g>
           ))}
-          <text x={M.l + IW} y={H - 4} textAnchor="end">{lang === "vi" ? "Tuổi thai (tuần)" : "Gestational age (w)"}</text>
+          <text x={M.l + IW} y={H - 4} textAnchor="end">{t(lang, "axisGa")}</text>
         </g>
         <path d={path} className="chart__median" />
         {point && <circle cx={X(point[0])} cy={Y(point[1])} r={5} className="chart__point" />}
@@ -82,7 +82,7 @@ function BpdChart({ r, lang }: { r: AssessmentOut; lang: Lang }) {
       log={false}
       yTicks={[15, 20, 25, 30]}
       lang={lang}
-      note={lang === "vi" ? "Trung vị: BPD = 0.4299 × tuổi thai (ngày) − 16.338 (de Paco Matallana 2025)." : "Median: BPD = 0.4299 × GA (days) − 16.338 (de Paco Matallana 2025)."}
+      note={t(lang, "bpdMedianNote")}
     />
   );
 }
@@ -127,7 +127,7 @@ function PriorChart({ r, lang }: { r: AssessmentOut; lang: Lang }) {
             </g>
           ))}
           <line x1={M.l} x2={W - M.r} y1={Y(0)} y2={Y(0)} />
-          <text x={M.l + IW} y={H - 4} textAnchor="end">{lang === "vi" ? "Tuổi thai khi sinh do TSG (tuần)" : "GA at delivery with PE (w)"}</text>
+          <text x={M.l + IW} y={H - 4} textAnchor="end">{L("axisGaPe")}</text>
         </g>
         {shade && <path d={shade} className="chart__shade" />}
         <path d={line} className="chart__median" />
@@ -143,7 +143,7 @@ function PriorChart({ r, lang }: { r: AssessmentOut; lang: Lang }) {
       <div className="chart__legend">
         <span><i className="sw sw--shade" /> {L("priorChartNote")}{r37 ? ` (1 / ${r37.one_in})` : ""}</span>
       </div>
-      <p className="muted small">μ = {mu.toFixed(2)}, σ = {sd.toFixed(2)} {lang === "vi" ? "tuần" : "weeks"}</p>
+      <p className="muted small">μ = {mu.toFixed(2)}, σ = {sd.toFixed(2)} {L("weeks")}</p>
     </figure>
   );
 }

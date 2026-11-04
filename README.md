@@ -74,3 +74,17 @@ What it does today:
 Biomarker likelihood parameters come from a secondary source that matches the FMF online
 calculator (see `docs/coefficients.md`). Until a second person checks them against O'Gorman 2016,
 every result says it is not for clinical use.
+
+## Languages
+
+Vietnamese and English are kept apart, on screen, on paper and in the code:
+
+- `web/src/locales/vi.ts`: every Vietnamese word the app shows, including option lists, the
+  screening protocols, the "How it is calculated" labels and translations of engine/API messages.
+- `web/src/locales/en.ts`: the same keys in English. It is typed against `vi.ts`, so the build
+  fails if a key is missing or misspelled in either file.
+- Components only look text up by key (`t(lang, "key")`, `loc(lang).info`). They contain no
+  inline Vietnamese or English sentences.
+- The printed report uses one language: the screen language, or the other one from the
+  second print button.
+

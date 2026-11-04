@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { liveMap, liveOa, liveUtpi } from "./api";
-import { analysers, conceptions, datingMethods, ethnicities, t, type Key, type Lang } from "./i18n";
+import { analysers, loc, t, type Key, type Lang } from "./i18n";
 import type { AssessmentOut, FormState, YN } from "./types";
 
 function FieldBox({ label, bad, hint, children }: { label: string; bad: boolean; hint?: string; children: ReactNode }) {
@@ -107,8 +107,8 @@ export function AssessmentForm({ lang, f, set, missing, result }: Props) {
           <FieldBox label={L("ethnicity")} bad={bad("ethnicity")}>
             <select value={f.ethnicity} onChange={(e) => set({ ethnicity: e.target.value })}>
               <option value="" />
-              {ethnicities.map(([v, vi, en]) => (
-                <option key={v} value={v}>{lang === "vi" ? vi : en}</option>
+              {loc(lang).ethnicities.map(([v, label]) => (
+                <option key={v} value={v}>{label}</option>
               ))}
             </select>
           </FieldBox>
@@ -120,8 +120,8 @@ export function AssessmentForm({ lang, f, set, missing, result }: Props) {
           <FieldBox label={L("datingMethod")} bad={bad("datingMethod")}>
             <select value={f.dating_method} onChange={(e) => set({ dating_method: e.target.value })}>
               <option value="" />
-              {datingMethods.map(([v, vi, en, ok]) => (
-                <option key={v} value={v} disabled={!ok}>{lang === "vi" ? vi : en}</option>
+              {loc(lang).datingMethods.map(([v, label, ok]) => (
+                <option key={v} value={v} disabled={!ok}>{label}</option>
               ))}
             </select>
           </FieldBox>
@@ -160,8 +160,8 @@ export function AssessmentForm({ lang, f, set, missing, result }: Props) {
           {yesNo("vanishing_twin", "vanishingTwin")}
           <FieldBox label={L("conception")} bad={false}>
             <select value={f.conception} onChange={(e) => set({ conception: e.target.value })}>
-              {conceptions.map(([v, vi, en]) => (
-                <option key={v} value={v}>{lang === "vi" ? vi : en}</option>
+              {loc(lang).conceptions.map(([v, label]) => (
+                <option key={v} value={v}>{label}</option>
               ))}
             </select>
           </FieldBox>
@@ -216,7 +216,7 @@ export function AssessmentForm({ lang, f, set, missing, result }: Props) {
             {result?.bpd && <span className="mom-chip">{L("median")}: {result.bpd.median_mm.toFixed(1)} mm</span>}
           </FieldBox>
         </div>
-        {f.heart === "absent" && <p className="error">{lang === "vi" ? "Không có hoạt động tim thai: không áp dụng đánh giá nguy cơ." : "No fetal heart activity: risk assessment does not apply."}</p>}
+        {f.heart === "absent" && <p className="error">{L("heartAbsentNote")}</p>}
       </section>
 
       <section className="card">
@@ -292,7 +292,7 @@ export function AssessmentForm({ lang, f, set, missing, result }: Props) {
               <FieldBox label="PSV 2" bad={false}>{oaCell(3, "left PSV 2")}{unit("cm/s")}</FieldBox>
             </div>
           </div>
-          <FieldBox label={L("oa")} bad={false} hint={lang === "vi" ? "trung bình PSV2 / PSV1" : "mean of PSV2 / PSV1"}>
+          <FieldBox label={L("oa")} bad={false} hint={L("oaHint")}>
             <input value={fmt(oaLive, 2)} readOnly aria-readonly="true" />
           </FieldBox>
           <p className="hint-line">{L("oaNote")}</p>

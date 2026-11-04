@@ -11,7 +11,7 @@ const fmtDate = (iso: string) => {
 
 /** "1 in 12" as on the FMF calculator (Vietnamese reports read "1/12"). */
 const oneIn = (r: Risk | undefined, lang: Lang = "en") =>
-  r ? (lang === "vi" ? `1/${r.one_in.toLocaleString("en")}` : `1 in ${r.one_in.toLocaleString("en")}`) : "—";
+  r ? t(lang, "oneInFmt").replace("{n}", r.one_in.toLocaleString("en")) : "—";
 
 function rawValue(r: AssessmentOut, m: string): string {
   if (m === "map" && r.map_mmhg !== null) return `${r.map_mmhg} mmHg`;
@@ -139,11 +139,6 @@ export function RiskLines({ r, lang }: { r: AssessmentOut; lang: Lang }) {
 
 type Facts = { label: Key; value: string }[];
 
-const org: Record<Lang, string> = {
-  vi: "Bệnh viện Vinmec Ocean Park 2 · Khoa Sản",
-  en: "Vinmec Ocean Park 2 Hospital · Department of Obstetrics",
-};
-
 /** One-page A4 report in a single language (the one chosen when printing). */
 export function PrintReport({ r, facts, lang }: { r: AssessmentOut; facts: Facts; lang: Lang }) {
   const L = (k: Key) => t(lang, k);
@@ -152,7 +147,7 @@ export function PrintReport({ r, facts, lang }: { r: AssessmentOut; facts: Facts
     <article className="print-report" aria-hidden="true" lang={lang}>
       <header className="pr__head">
         <div>
-          <div className="pr__org">{org[lang]}</div>
+          <div className="pr__org">{L("orgName")}</div>
           <h1>{L("appTitle")}</h1>
         </div>
         <div className="pr__meta">
