@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pe-risk"
+version = "0.1.0"
+description = "Preeclampsia risk engine (FMF competing-risks model, published coefficients) for Vinmec"
+requires-python = ">=3.11"
+dependencies = ["numpy>=1.26"]
+
+[project.optional-dependencies]
+test = ["pytest>=8"]
+
+[tool.setuptools.packages.find]
+include = ["pe_risk*"]
+
+[tool.setuptools.package-data]
+"pe_risk.coefficients" = ["*.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
