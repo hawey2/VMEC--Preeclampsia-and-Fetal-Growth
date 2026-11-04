@@ -4,12 +4,17 @@ web/tests/parity.test.ts runs the same requests through the browser engine (src/
 checks the results match. Re-run this whenever the Python engine or the coefficients change:
 
     python web/tests/make_parity_cases.py
+
+CI runs it with --check: it then compares instead of writing, allowing last-digit floating-point
+differences between machines (1e-9 relative), and fails if the committed cases are out of date.
 """
 
 from __future__ import annotations
 
 import json
+import math
 import random
+import sys
 from datetime import date, timedelta
 from pathlib import Path
 
@@ -115,5 +120,25 @@ while len(cases) < N:
     except HTTPException as e:
         cases.append({"request": req, "error": e.detail})
 
-Path(__file__).with_name("parity_cases.json").write_text(json.dumps(cases, separators=(",", ":")) + "\n")
-print(f"{len(cases)} cases, {sum('error' in c for c in cases)} with errors")
+
+
+def close(a, b) -> bool:
+    if isinstance(a, float) or isinstance(b, float):
+        return isinstance(a, (int, float)) and isinstance(b, (int, float)) and math.isclose(a, b, rel_tol=1e-9, abs_tol=1e-12)
+    if isinstance(a, list) and isinstance(b, list):
+        return len(a) == len(b) and all(close(x, y) for x, y in zip(a, b))
+    if isinstance(a, dict) and isinstance(b, dict):
+        return a.keys() == b.keys() and all(close(a[k], b[k]) for k in a)
+    return a == b
+
+
+out_file = Path(__file__).with_name("parity_cases.json")
+if "--check" in sys.argv:
+    committed = json.loads(out_file.read_text())
+    bad = [i for i, (x, y) in enumerate(zip(cases, committed)) if not close(x, y)]
+    if bad or len(committed) != len(cases):
+        sys.exit(f"parity_cases.json is out of date (cases {bad[:10]}...): run python web/tests/make_parity_cases.py")
+    print(f"{len(cases)} cases match parity_cases.json")
+else:
+    out_file.write_text(json.dumps(cases, separators=(",", ":")) + "\n")
+    print(f"{len(cases)} cases, {sum('error' in c for c in cases)} with errors")
