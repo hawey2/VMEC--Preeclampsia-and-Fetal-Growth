@@ -1,29 +1,19 @@
 """Biomarker likelihood given gestational age at delivery with PE.
 
-Model structure (competing-risks, O'Gorman 2016 / Tan 2018): log10 MoM values
+Model structure (competing risks, O'Gorman 2016 / Tan 2018): log10 MoM values
 follow a multivariate Gaussian. In pregnancies with PE the mean of each marker
-deviates from 0 linearly with gestational age at delivery, and the deviation
-shrinks to 0 at the gestation where PE pregnancies look like unaffected ones.
+is a straight line in gestational age at delivery, ``b0 + b1 * GA``, until it
+reaches 0 (the unaffected mean) at ``GA = -b0 / b1``; after that it stays 0.
 
-The numeric parameters are NOT bundled because the published tables could not
-be accessed (see coefficients JSON, ``likelihood.verification == "missing"``).
-Expected parameter shape::
+JSON shape::
 
     "likelihood": {
-      "markers": {
-        "map":  {"slope_per_week": <float>, "ga_meets_unaffected_weeks": <float>},
-        "utpi": {...}, "plgf": {...}
-      },
-      "covariance": {
-        "order": ["map", "utpi", "plgf"],
-        "sd": [<float>, <float>, <float>],
-        "correlation": [[1, r12, r13], [r12, 1, r23], [r13, r23, 1]]
-      }
+      "markers": {"map": {"b0": <float>, "b1_per_week": <float>}, "utpi": {...}, "plgf": {...}},
+      "covariance": {"order": ["map", "utpi", "plgf"], "matrix": [[...], [...], [...]]}
     }
 
-If the paper's parameterisation differs (e.g. intercept + slope, separate
-SDs for PE), adapt ``marker_mean`` and the JSON together; the tests pin the
-behaviour so a change is visible.
+The older form ``{"slope_per_week", "ga_meets_unaffected_weeks"}`` and a
+covariance given as ``sd`` + ``correlation`` are also accepted.
 """
 
 from __future__ import annotations
@@ -35,6 +25,10 @@ from .coefficients import CoefficientSet
 
 def marker_mean(t_weeks: np.ndarray, params: dict) -> np.ndarray:
     """Mean log10 MoM for a pregnancy whose PE time is ``t_weeks``."""
+    if "b0" in params:
+        b0, b1 = params["b0"], params["b1_per_week"]
+        t0 = -b0 / b1
+        return np.where(t_weeks < t0, b0 + b1 * t_weeks, 0.0)
     t0 = params["ga_meets_unaffected_weeks"]
     slope = params["slope_per_week"]
     return np.where(t_weeks < t0, slope * (t_weeks - t0), 0.0)
@@ -42,8 +36,9 @@ def marker_mean(t_weeks: np.ndarray, params: dict) -> np.ndarray:
 
 def covariance(coef: CoefficientSet, markers: list[str]) -> np.ndarray:
     cov = coef.data["likelihood"]["covariance"]
-    order = cov["order"]
-    idx = [order.index(m) for m in markers]
+    idx = [cov["order"].index(m) for m in markers]
+    if "matrix" in cov:
+        return np.asarray(cov["matrix"], dtype=float)[np.ix_(idx, idx)]
     sd = np.asarray(cov["sd"], dtype=float)[idx]
     corr = np.asarray(cov["correlation"], dtype=float)[np.ix_(idx, idx)]
     return corr * np.outer(sd, sd)

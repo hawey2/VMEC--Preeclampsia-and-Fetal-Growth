@@ -31,7 +31,7 @@ def test_health_and_model():
     assert client.get("/api/health").json() == {"status": "ok"}
     m = client.get("/api/model").json()
     assert m["label"] == "fmf-11-13-v1"
-    assert m["combined_available"] is False
+    assert m["combined_available"] is True
     assert m["cutoff_one_in"] == 100
 
 
@@ -44,8 +44,8 @@ def test_full_assessment():
     assert set(out["moms"]) == {"map", "utpi", "plgf"}
     assert out["map_mmhg"] == pytest.approx(83.83, abs=0.05)
     assert out["utpi_mean"] == 1.75
-    assert out["combined"] is None
-    assert out["screen"]["basis"] == "maternal_factors_only"
+    assert [x["cutoff_weeks"] for x in out["combined"]] == [32, 37]
+    assert out["screen"]["basis"] == "combined"
     assert out["screen"]["high_risk"] is False
     assert [x["cutoff_weeks"] for x in out["maternal_factors_only"]] == [32, 37]
     assert any("not for clinical use" in w for w in out["warnings"])
@@ -109,7 +109,8 @@ def test_extra_outputs_for_charts_and_formulas():
     assert out["map_operator"] == "MW Lan"
     # history line + one line per marker + all markers together
     assert [c["markers"] for c in out["combinations"]] == [[], ["map"], ["utpi"], ["plgf"], ["map", "utpi", "plgf"]]
-    assert out["combinations"][1]["risk37"] is None  # likelihood not loaded
+    assert all(c["risk37"] is not None for c in out["combinations"])
+    assert out["combinations"][-1]["risk37"] == out["combined"][1]
 
 
 def test_bpd_dating_and_absent_heart():

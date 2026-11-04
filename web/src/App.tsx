@@ -174,8 +174,8 @@ export default function App() {
             <p className="muted">
               {L("ga")} {result.ga_label} ({L("dating")} {result.dating_method.toUpperCase()}) · {L("age")} {result.age_years.toFixed(1)} {L("years")}
             </p>
-            <ScreenBadge r={result} lang={lang} />
             <RiskLines r={result} lang={lang} />
+            <ScreenBadge r={result} lang={lang} />
             <RiskTable r={result} lang={lang} />
             {!result.combined && Object.keys(result.moms).length > 0 && <p className="note">{L("combinedMissing")}</p>}
             <MomTable r={result} lang={lang} />

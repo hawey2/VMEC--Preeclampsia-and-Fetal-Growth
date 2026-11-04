@@ -136,6 +136,11 @@ details { margin: 8px 0; font-size: 13.5px; }
   .print-report .screen { background: #fff !important; color: #000 !important; border: 2px solid #000; padding: 5px 10px; margin: 6px 0; }
   .print-report .screen--high strong::before { content: "▲ "; }
   .pr__action { margin: 6px 0 8px; }
+  .pr__interp { font-size: 8.8pt !important; }
+  .pr__cols dl { grid-template-columns: 1fr 1fr !important; column-gap: 12px; }
+  .pr__cols dl div { display: block !important; }
+  .pr__cols dd { text-align: left !important; }
+  .pr__cols dt { font-size: 8pt; }
   .pr__notes { font-size: 8.5pt; color: #333; break-inside: avoid; }
   .pr__notes ul { margin: 2px 0 6px; padding-left: 16px; }
   .pr__sign { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin: 14px 0 6px; break-inside: avoid; }
@@ -191,3 +196,9 @@ details { margin: 8px 0; font-size: 13.5px; }
 .formula { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 13px; background: var(--chip-bg, rgba(127, 127, 127, 0.08)); padding: 6px 10px; border-radius: 6px; overflow-wrap: anywhere; margin: 4px 0; }
 .pr__extra { list-style: none; padding: 0; margin: 2px 0; font-size: 9pt; }
 .pr__interp { font-size: 9pt; margin: 4px 0; }
+.headline { font-size: 18px; margin: 6px 0 8px; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--line); background: var(--card); }
+.headline strong { font-size: 22px; font-variant-numeric: tabular-nums; }
+.headline--high { border-color: var(--high); background: var(--high-bg); }
+.headline--high strong { color: var(--high); }
+.risklines caption { text-align: left; caption-side: top; padding: 4px 0; }
+.pr__headline { font-size: 11pt; margin: 2px 0 4px; }

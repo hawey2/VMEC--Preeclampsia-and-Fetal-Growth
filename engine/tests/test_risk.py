@@ -39,13 +39,40 @@ def test_outside_window_is_refused(reference_woman):
         assess(Assessment(ga_days=140, maternal=reference_woman))
 
 
-def test_bundled_model_refuses_to_combine_without_likelihood(reference_woman):
+def test_model_refuses_to_combine_without_likelihood(reference_woman, coef):
+    no_lk = coefficients.from_dict({**coef.data, "likelihood": {"verification": "missing", "markers": None, "covariance": None}})
     b = Biomarkers(map_mmhg=95, utpi_left=2.2, utpi_right=2.4, plgf_pg_ml=20, plgf_analyser=Analyser.COBAS_E411)
-    r = assess(Assessment(84, reference_woman, b))
+    r = assess(Assessment(84, reference_woman, b), no_lk)
     assert r.combined is None
     assert set(r.moms) == {"map", "utpi", "plgf"}
     assert any("likelihood parameters are missing" in w for w in r.warnings)
     assert any("not for clinical use" in w for w in r.warnings)
+
+
+def test_bundled_likelihood_combines_markers(reference_woman):
+    """Bundled (secondary-source) parameters: abnormal markers raise preterm-PE risk well above
+    the history-only risk, normal markers lower it, and results are flagged not clinical."""
+    high = Biomarkers(map_mmhg=105, utpi_left=2.6, utpi_right=2.8, plgf_pg_ml=15, plgf_analyser=Analyser.COBAS_E411)
+    r = assess(Assessment(88, reference_woman, high))
+    prior37 = r.maternal_factors_only[1].probability
+    assert r.combined is not None and r.markers_used == ["map", "plgf", "utpi"]
+    assert r.combined[1].probability > 10 * prior37
+    assert r.combined[0].probability < r.combined[1].probability
+    assert any("likelihood" in w and "not for clinical use" in w for w in r.warnings)
+
+    normal = Biomarkers(map_mmhg=84, utpi_left=1.5, utpi_right=1.6)
+    rn = assess(Assessment(88, reference_woman, normal))
+    assert rn.combined[1].probability < prior37
+
+
+def test_mean_log10_mom_lines():
+    """Pin the PE regression lines: b0 + b1*GA, flat at 0 from -b0/b1 weeks."""
+    import numpy as np
+    from pe_risk import likelihood
+    p = coefficients.load().data["likelihood"]["markers"]
+    assert likelihood.marker_mean(np.array([30.0]), p["utpi"])[0] == pytest.approx(0.5861 - 0.014233 * 30)
+    assert likelihood.marker_mean(np.array([45.0]), p["utpi"])[0] == 0.0
+    assert likelihood.marker_mean(np.array([30.0]), p["plgf"])[0] == pytest.approx(-0.92352 + 0.021584 * 30)
 
 
 def test_missing_inputs_are_reported(reference_woman):
@@ -57,7 +84,7 @@ def test_missing_inputs_are_reported(reference_woman):
 
 def test_mom_truncation(reference_woman):
     r = assess(Assessment(84, reference_woman, Biomarkers(plgf_mom=0.1)))
-    assert r.moms["plgf"] == 0.4
+    assert r.moms["plgf"] == pytest.approx(10 ** -0.56550992, abs=1e-3)
     assert any("truncated" in w for w in r.warnings)
 
 

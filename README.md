@@ -58,7 +58,7 @@ report = assess(Assessment(ga_days=86, maternal=mf,
                                                  plgf_pg_ml=32, plgf_analyser=Analyser.COBAS_E411)))
 report.maternal_factors_only   # risk of PE <32 and <37 weeks from maternal factors
 report.moms                    # MAP, UtA-PI, PlGF MoMs
-report.combined                # None until the biomarker likelihood parameters are filled in
+report.combined                # risk of PE <32 and <37 weeks from maternal factors + biomarkers
 report.warnings                # why the result is not clinical-grade
 ```
 
@@ -71,6 +71,6 @@ What it does today:
   simulation calibration check.
 - Every result carries the coefficient set label and SHA-256 checksum for the printed report.
 
-What it cannot do yet: combine biomarkers with the prior, because the published likelihood
-parameters (O'Gorman 2016) could not be accessed. The engine reports this in `warnings` and
-returns `combined = None` rather than guessing.
+Biomarker likelihood parameters come from a secondary source that matches the FMF online
+calculator (see `docs/coefficients.md`). Until a second person checks them against O'Gorman 2016,
+every result says it is not for clinical use.

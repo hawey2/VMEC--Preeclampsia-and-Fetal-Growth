@@ -11,9 +11,10 @@ def test_every_component_names_its_source_and_status(coef):
 def test_nothing_is_marked_clinical_ready_yet(coef):
     """Flip a component to 'verified' only after a second person checks it
     against the printed paper; this test then needs updating on purpose."""
-    for comp in ("prior", "mom", "likelihood"):
+    for comp in ("prior", "mom", "likelihood", "truncation"):
         assert not coef.is_clinical_ready(comp)
-    assert not coef.has_likelihood()
+    assert coef.has_likelihood()
+    assert coef.verification("likelihood") == "secondary_source"
 
 
 def test_checksum_is_stable(coef):

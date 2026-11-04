@@ -86,7 +86,9 @@ def assess(a: Assessment, coef: CoefficientSet | None = None,
             f"({WINDOW_DAYS[0]}-{WINDOW_DAYS[1]} days)"
         )
 
-    for comp in ("prior", "mom"):
+    for comp in ("prior", "mom", "likelihood", "truncation"):
+        if comp == "likelihood" and not coef.has_likelihood():
+            continue
         if not coef.is_clinical_ready(comp):
             warnings.append(
                 f"Coefficients for '{comp}' are '{coef.verification(comp)}', "

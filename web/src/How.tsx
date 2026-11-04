@@ -122,11 +122,18 @@ export function HowItWorks({ r, f, lang }: { r: AssessmentOut; f: FormState; lan
       </p>
 
       <h3>6. {vi ? "Kết hợp chỉ số sinh học (Bayes)" : "Combining biomarkers (Bayes)"}</h3>
-      <p className="formula">p(t | MoMs) ∝ φ((t − μ)/σ) × N(log₁₀ MoM; m(t), Σ)</p>
+      <p className="formula">p(t | MoMs) ∝ φ((t − μ)/σ) × N(log₁₀ MoM; m(t), Σ), t &gt; g</p>
+      <p className="formula">
+        m(t) = b₀ + b₁·t {vi ? "khi" : "while"} &lt; 0 ({vi ? "sau đó" : "then"} 0): MAP 0.088997 − 0.0016711·t; UtA-PI 0.5861 − 0.014233·t; PlGF −0.92352 + 0.021584·t
+      </p>
+      <p className="formula">
+        P(PE &lt; 37) = ∫<sub>g</sub><sup>37</sup> p(t | MoMs) dt / ∫<sub>g</sub><sup>∞</sup> p(t | MoMs) dt
+        {r.combined && ` = ${r.combined[1].probability.toPrecision(3)} ≈ 1 / ${r.combined[1].one_in}`}
+      </p>
       <p className="muted small">
         {vi
-          ? "m(t) và Σ là các tham số đã công bố trong O'Gorman 2016 (doi:10.1016/j.ajog.2015.08.034). Ứng dụng chưa có các tham số này nên chưa tính bước này."
-          : "m(t) and Σ are the published parameters in O'Gorman 2016 (doi:10.1016/j.ajog.2015.08.034). The app does not have them yet, so this step is not calculated."}
+          ? "Tham số m(t) và ma trận hiệp phương sai Σ lấy từ nguồn thứ cấp (PERiskProfileR, khớp với máy tính FMF trực tuyến ở ngưỡng 1/100 trong 4986/5000 ca mô phỏng). Nguồn gốc: O'Gorman 2016 (doi:10.1016/j.ajog.2015.08.034), cần đối chiếu với bản in trước khi dùng lâm sàng."
+          : "m(t) and the covariance Σ come from a secondary source (PERiskProfileR, which matched the FMF online calculator at the 1 in 100 cut-off in 4986 of 5000 simulated cases). Primary source: O'Gorman 2016 (doi:10.1016/j.ajog.2015.08.034); check against the printed paper before clinical use."}
       </p>
     </details>
   );

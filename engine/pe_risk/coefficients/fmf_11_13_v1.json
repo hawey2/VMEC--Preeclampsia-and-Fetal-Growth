@@ -6,9 +6,9 @@
     "verified": "Transcribed and checked by a second person against the printed paper.",
     "transcribed": "Transcribed from the paper by one person; needs a second-person check before clinical use.",
     "transcribed_signs_inferred": "Numbers transcribed; one or more signs inferred from confidence intervals or text because the source extraction lost minus signs. Must be checked against the printed table.",
-    "missing": "Not available in any source we could access. The component is disabled until filled."
+    "missing": "Not available in any source we could access. The component is disabled until filled.",
+    "secondary_source": "Taken from a secondary source (another implementation) because the primary paper could not be read; that implementation agrees with the FMF online calculator. Must be checked against the primary paper before clinical use."
   },
-
   "prior": {
     "verification": "transcribed_signs_inferred",
     "source": "Wright D, Syngelaki A, Akolekar R, Poon LC, Nicolaides KH. Am J Obstet Gynecol 2015;213:62.e1-10, Table 2. doi:10.1016/j.ajog.2015.02.018",
@@ -21,11 +21,11 @@
     "intercept": 54.3637,
     "sd": 6.8833,
     "age_over_35_per_year": -0.206886,
-    "height_minus_164_per_cm": 0.117110,
+    "height_minus_164_per_cm": 0.11711,
     "ethnicity": {
       "white": 0.0,
       "afro_caribbean": -2.6786,
-      "south_asian": -1.1290,
+      "south_asian": -1.129,
       "east_asian": 0.0,
       "mixed": 0.0
     },
@@ -37,7 +37,7 @@
       "prev_ga_minus_24_squared": 0.0271988
     },
     "parous_no_previous_pe": {
-      "intercept": -4.3350,
+      "intercept": -4.335,
       "interval_years_pow_minus_1": -4.15137651,
       "interval_years_pow_minus_0_5": 9.21473572,
       "prev_ga_minus_24_squared": 0.01549673
@@ -52,7 +52,6 @@
       "why": "The fractional polynomial diverges as the interval approaches zero; the paper does not say how FMF bounds it. Needs validation against the FMF calculator."
     }
   },
-
   "mom": {
     "verification": "transcribed",
     "source": "Tan MY et al. Ultrasound Obstet Gynecol 2018;52:186-195, Appendix 1 (formulas for MoM at 11-13 weeks). doi:10.1002/uog.19112. The appendix states these are default parameters whose suitability should be checked before use.",
@@ -64,11 +63,13 @@
     "map": {
       "intercept": 1.9364,
       "ga": 0.000428017,
-      "ga_squared": -0.000028811,
+      "ga_squared": -2.8811e-05,
       "weight": 0.0012053,
-      "weight_squared": -0.00000928,
+      "weight_squared": -9.28e-06,
       "height": -0.00018157,
-      "ethnicity": {"afro_caribbean": -0.00393},
+      "ethnicity": {
+        "afro_caribbean": -0.00393
+      },
       "smoker": -0.00864,
       "chronic_hypertension": 0.05363,
       "chronic_hypertension_x_weight": -0.00023975,
@@ -84,9 +85,13 @@
       "intercept": 0.26457,
       "ga": -0.004838365,
       "weight": -0.00087443,
-      "weight_squared": 0.00000733,
+      "weight_squared": 7.33e-06,
       "age": -0.00064175,
-      "ethnicity": {"afro_caribbean": 0.02162, "east_asian": 0.00763, "mixed": 0.01199},
+      "ethnicity": {
+        "afro_caribbean": 0.02162,
+        "east_asian": 0.00763,
+        "mixed": 0.01199
+      },
       "diabetes_type1": -0.02749,
       "parous_no_previous_pe": -0.00295,
       "parous_previous_pe": 0.00965
@@ -100,9 +105,14 @@
       "ga": 0.012263018,
       "ga_squared": 0.000149743,
       "weight": -0.001682761,
-      "weight_squared": 0.00000878,
+      "weight_squared": 8.78e-06,
       "age": 0.002174191,
-      "ethnicity": {"afro_caribbean": 0.193561059, "south_asian": 0.072679108, "east_asian": 0.034550109, "mixed": 0.079010576},
+      "ethnicity": {
+        "afro_caribbean": 0.193561059,
+        "south_asian": 0.072679108,
+        "east_asian": 0.034550109,
+        "mixed": 0.079010576
+      },
       "smoker": 0.160836176,
       "diabetes_type1": -0.029630891,
       "diabetes_type2_insulin": -0.039984195,
@@ -110,29 +120,92 @@
       "parous_no_previous_pe": 0.02075005
     }
   },
-
   "likelihood": {
-    "verification": "missing",
-    "source": "O'Gorman N et al. Am J Obstet Gynecol 2016;214:103.e1-12, doi:10.1016/j.ajog.2015.08.034 (and Tan 2018). Tables are behind a subscription and could not be read.",
-    "notes": [
-      "Needed: for each biomarker, the line relating mean log10 MoM in PE to gestational age at delivery, the gestational age where it meets the unaffected mean, and the SDs and correlations of log10 MoM.",
-      "Until filled, the engine reports risk from maternal factors only and refuses biomarker-combined risks."
-    ],
-    "markers": null,
-    "covariance": null
+    "verification": "secondary_source",
+    "source": "Regression of mean log10 MoM on gestational age at delivery with PE (mean = b0 + b1*GA, 0 when GA >= -b0/b1), covariance of log10 MoM, and log10 MoM truncation limits, as given in the PERiskProfileR 'Details' vignette (A. Jarmund, https://github.com/andjar/PERiskProfileR, GPL-3.0). Its validation article reports agreement with the FMF online calculator at the 1 in 100 cut-off in 4986 of 5000 simulated cases. Primary source believed to be O'Gorman N et al. Am J Obstet Gynecol 2016;214:103.e1-12, doi:10.1016/j.ajog.2015.08.034 (not read).",
+    "markers": {
+      "map": {
+        "b0": 0.088997,
+        "b1_per_week": -0.0016711
+      },
+      "utpi": {
+        "b0": 0.5861,
+        "b1_per_week": -0.014233
+      },
+      "plgf": {
+        "b0": -0.92352,
+        "b1_per_week": 0.021584
+      }
+    },
+    "covariance": {
+      "order": [
+        "map",
+        "utpi",
+        "plgf"
+      ],
+      "matrix": [
+        [
+          0.00141396,
+          -0.0002726,
+          -0.0001907
+        ],
+        [
+          -0.0002726,
+          0.01630906,
+          -0.0034539
+        ],
+        [
+          -0.0001907,
+          -0.0034539,
+          0.03147225
+        ]
+      ],
+      "sd": [
+        0.037603,
+        0.127707,
+        0.177404
+      ],
+      "correlation": [
+        [
+          1.0,
+          -0.056767,
+          -0.028587
+        ],
+        [
+          -0.056767,
+          1.0,
+          -0.152451
+        ],
+        [
+          -0.028587,
+          -0.152451,
+          1.0
+        ]
+      ]
+    }
   },
-
   "truncation": {
-    "verification": "transcribed",
-    "source": "Chaemsaithong P et al. Ultrasound Obstet Gynecol 2020;56:206-214 (0.4 to 2.5 MoM used as truncation limits). doi:10.1002/uog.21905. FMF's own limits per marker are not confirmed.",
-    "utpi": [0.4, 2.5],
-    "plgf": [0.4, 2.5],
-    "map": [0.4, 2.5]
+    "verification": "secondary_source",
+    "source": "log10 MoM limits from the same PERiskProfileR vignette (MAP +/-0.12240759, UtA-PI +/-0.42161519, PlGF +/-0.56550992), converted to MoM.",
+    "map": [
+      0.7544,
+      1.3256
+    ],
+    "utpi": [
+      0.3788,
+      2.6401
+    ],
+    "plgf": [
+      0.272,
+      3.6771
+    ]
   },
-
   "dating": {
     "verification": "transcribed",
     "source": "Robinson HP, Fleming JE. Br J Obstet Gynaecol 1975;82:702-710. GA (days) = 8.052 * sqrt(CRL mm) + 23.73.",
-    "crl_mm_range": [45.0, 84.0]
+    "crl_mm_range": [
+      45.0,
+      84.0
+    ]
   }
 }
