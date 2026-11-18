@@ -193,6 +193,19 @@ details { margin: 8px 0; font-size: 13.5px; }
 .how h3 { font-size: 14.5px; margin: 14px 0 4px; }
 .how ul { padding-left: 18px; }
 .how li { margin: 3px 0; }
+.drugs .ddi td { vertical-align: top; font-size: 13px; }
+.drugs .ddi td:nth-child(2) { min-width: 160px; }
+.ddi--avoid { background: var(--high-bg); border-color: var(--high); color: var(--high); }
+.ddi--caution { background: var(--warn-bg); border-color: var(--warn-line); color: var(--warn-ink); }
+.ddi--separate { background: var(--low-bg); border-color: var(--low); color: var(--low); }
+@media (max-width: 640px) {
+  .ddi thead { display: none; }
+  .ddi, .ddi tbody, .ddi tr, .ddi td { display: block; }
+  .ddi tr { border-bottom: 1px solid var(--line); padding: 8px 0; }
+  .drugs .ddi td { border: none; padding: 2px 0; }
+  .drugs .ddi td:nth-child(2) { min-width: 0; }
+  .ddi td[data-label]::before { content: attr(data-label) ": "; color: var(--muted); font-weight: 600; }
+}
 .formula { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 13px; background: var(--chip-bg, rgba(127, 127, 127, 0.08)); padding: 6px 10px; border-radius: 6px; overflow-wrap: anywhere; margin: 4px 0; }
 .pr__extra { list-style: none; padding: 0; margin: 2px 0; font-size: 9pt; }
 .pr__interp { font-size: 9pt; margin: 4px 0; }

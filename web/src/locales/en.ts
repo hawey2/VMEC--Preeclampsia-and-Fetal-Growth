@@ -179,6 +179,18 @@ const en: Locale = {
     gaEdd: "exam date",
     gaIvf: "exam − transfer",
     infoSource: "Source: The Fetal Medicine Foundation guidance and the papers cited under How it is calculated.",
+    aspirinCheck: "Before prescribing aspirin: ask about allergy or asthma triggered by aspirin/NSAIDs, peptic ulcer and bleeding disorders; review current medicines (other NSAIDs, heparin, SSRI/SNRI antidepressants, medicines and supplements containing salicylates).",
+    drugsTitle: "Related drugs and drug interactions",
+    drugsIntro: "A summary for reviewing medicines when prescribing prophylactic aspirin or treating hypertension in pregnancy. It does not replace the product leaflet, a formulary or a clinical pharmacist.",
+    drugsTableTitle: "Interactions to check",
+    colCombo: "Combination",
+    colEffect: "Effect",
+    colManage: "Management",
+    colLevel: "Level",
+    level_avoid: "Avoid",
+    level_caution: "Caution",
+    level_separate: "Separate doses",
+    drugsSource: "Sources: ASPRE (Rolnik 2017; Wright 2017), STATIN (Döbert 2021), WHO calcium recommendation, ISSHP 2021, FDA 2020 NSAID warning, product leaflets. To be reviewed by a Vinmec clinical pharmacist and obstetrician before clinical use.",
     signIn: "Sign in",
     signInIntro: "Use your Vinmec account.",
     username: "Username",
@@ -311,6 +323,115 @@ const en: Locale = {
     family_history_pe: "Mother had PE: −1.7154",
     diabetes: "Diabetes: −3.3899",
   } as Record<string, string>,
+
+  drugs: {
+    groups: [
+      {
+        title: "Prophylactic aspirin (high risk at 11–13 weeks)",
+        items: [
+          "150 mg every night, starting at 11–14 weeks and stopping at 36 weeks (ASPRE trial, Rolnik 2017).",
+          "Reduces PE <32 weeks by about 90% and PE <37 weeks by 60%; does not reduce term PE.",
+          "The benefit is larger when at least 90% of doses are taken (ASPRE secondary analysis, Wright 2017): advise taking it every night.",
+          "ASPRE excluded women with aspirin allergy, peptic ulcer, bleeding disorders or long-term NSAID use. The doctor decides these cases individually.",
+          "Stop at 36 weeks, ahead of delivery and spinal/epidural anaesthesia.",
+        ],
+      },
+      {
+        title: "Other drugs related to preeclampsia",
+        items: [
+          "Calcium: WHO recommends 1.5–2 g elemental calcium a day for pregnant women with low dietary calcium intake to reduce the risk of PE.",
+          "Pravastatin: in the STATIN trial (Döbert 2021), 20 mg a day from 35–37 weeks in high-risk women did not reduce delivery with PE. Not for use outside research.",
+          "Low-molecular-weight heparin: not routine prophylaxis for PE; use only for another indication such as antiphospholipid syndrome or thrombosis.",
+          "Once hypertension is present: labetalol, nifedipine and methyldopa are the usual drugs (ISSHP 2021). ACE inhibitors and angiotensin receptor blockers harm the fetus and are not used in pregnancy.",
+          "Magnesium sulphate: prevents and treats eclamptic seizures in severe PE; monitor tendon reflexes, respiratory rate and urine output; the antidote is calcium gluconate.",
+        ],
+      },
+      {
+        title: "Drugs and the calculator's input fields",
+        items: [
+          "Chronic hypertension: answer \"Yes\" if hypertension was present before pregnancy, even when it is treated and today's blood pressure is normal. This field changes both the prior risk and the expected MAP median.",
+          "Diabetes type II: record correctly whether it is treated with insulin. The two groups have different coefficients for the MAP, UtA-PI and PlGF medians.",
+          "Conception with ovulation drugs (clomiphene, letrozole…) is recorded but does not change the risk in this model; only IVF has its own coefficient.",
+          "Smoking changes the expected MAP and PlGF medians, so record it correctly.",
+          "Aspirin is not an input. Record aspirin use in the outcome: aspirin prevents preterm PE, so it is needed to re-evaluate the model on Vinmec data.",
+        ],
+      },
+    ],
+    interactions: [
+      {
+        level: "avoid",
+        combo: "Aspirin + other NSAIDs (ibuprofen, diclofenac, naproxen, meloxicam…)",
+        effect: "Higher risk of gastrointestinal ulcer and bleeding; ibuprofen can reduce aspirin's antiplatelet effect. From 20 weeks NSAIDs can also cause oligohydramnios (FDA 2020).",
+        manage: "Avoid; use paracetamol for pain and fever.",
+      },
+      {
+        level: "avoid",
+        combo: "Aspirin + other products containing salicylates (some cold remedies, bismuth subsalicylate)",
+        effect: "Duplicate active ingredient, adding up the salicylate dose.",
+        manage: "Ask about over-the-counter products; choose salicylate-free ones.",
+      },
+      {
+        level: "caution",
+        combo: "Aspirin + heparin or low-molecular-weight heparin (enoxaparin)",
+        effect: "Higher risk of bleeding.",
+        manage: "Combine only when indicated (e.g. antiphospholipid syndrome); watch for bleeding; inform the anaesthetist before spinal/epidural anaesthesia.",
+      },
+      {
+        level: "caution",
+        combo: "Aspirin + SSRI/SNRI antidepressants (sertraline, fluoxetine, venlafaxine…)",
+        effect: "Higher risk of bleeding, especially gastrointestinal.",
+        manage: "Do not stop the antidepressant without advice; watch for signs of bleeding.",
+      },
+      {
+        level: "caution",
+        combo: "Aspirin + long-term systemic corticosteroids (prednisolone…)",
+        effect: "Higher risk of gastrointestinal ulcer.",
+        manage: "Watch for stomach symptoms; consider gastric protection with long-term use.",
+      },
+      {
+        level: "caution",
+        combo: "Aspirin + supplements: ginkgo, high-dose fish oil, garlic, high-dose turmeric",
+        effect: "May increase the risk of bleeding (limited evidence).",
+        manage: "Ask about and record every supplement taken.",
+      },
+      {
+        level: "caution",
+        combo: "Nifedipine + magnesium sulphate",
+        effect: "Additive blood-pressure lowering; rarely muscle weakness from neuromuscular blockade.",
+        manage: "Can be given together; monitor blood pressure, tendon reflexes and breathing; keep calcium gluconate ready.",
+      },
+      {
+        level: "caution",
+        combo: "Magnesium sulphate + muscle relaxants or aminoglycosides (gentamicin)",
+        effect: "Stronger and longer neuromuscular blockade.",
+        manage: "Inform the anaesthetist; monitor breathing.",
+      },
+      {
+        level: "caution",
+        combo: "Labetalol + insulin or glucose-lowering drugs",
+        effect: "Beta-blockade can mask signs of hypoglycaemia (tremor, fast heart rate).",
+        manage: "Monitor blood glucose more closely.",
+      },
+      {
+        level: "avoid",
+        combo: "Nifedipine + grapefruit or its juice",
+        effect: "Inhibits CYP3A4 and raises nifedipine levels: low blood pressure, headache, oedema. Pomelo may interact in the same way.",
+        manage: "Avoid grapefruit while taking nifedipine.",
+      },
+      {
+        level: "separate",
+        combo: "Methyldopa + iron tablets",
+        effect: "Iron reduces methyldopa absorption, so blood pressure may be less well controlled.",
+        manage: "Take at least 2 hours apart.",
+      },
+      {
+        level: "separate",
+        combo: "Calcium + iron tablets",
+        effect: "Calcium reduces iron absorption.",
+        manage: "Take several hours apart (WHO advises separating calcium and iron).",
+      },
+    ],
+  },
 
   /** Screening guidance and measurement protocols. */
   info: [

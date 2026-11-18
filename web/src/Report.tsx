@@ -180,6 +180,7 @@ export function PrintReport({ r, facts, lang, record }: { r: AssessmentOut; fact
         </p>
         <p className="pr__interp">{RiskInterp(r, lang)}</p>
         <ScreenBadge r={r} lang={lang} />
+        {r.screen.high_risk && <p className="pr__interp">{L("aspirinCheck")}</p>}
         <RiskTable r={r} lang={lang} />
       </section>
 

@@ -8,6 +8,7 @@ import { MomTable, PrintReport, RiskLines, RiskTable, ScreenBadge } from "./Repo
 import { Charts } from "./Charts";
 import { HowItWorks } from "./How";
 import { Info } from "./Info";
+import { Drugs } from "./Drugs";
 import type { AssessmentOut, FormState, ScreeningSummary, User } from "./types";
 import { ChangePassword, Login } from "./Login";
 import { History, RecordBar } from "./Records";
@@ -341,6 +342,7 @@ export default function App() {
             <p>
               <strong>{L("action")}:</strong> {result.screen.high_risk ? L("actionHigh") : L("actionLow")}
             </p>
+            {result.screen.high_risk && <p className="note">{L("aspirinCheck")}</p>}
             {result.warnings.length > 0 && (
               <details>
                 <summary>{L("notes")} ({result.warnings.length})</summary>
@@ -356,6 +358,7 @@ export default function App() {
         </>
         )}
         <Info lang={lang} />
+        <Drugs lang={lang} />
       </div>
       {user && result && submitted && (
         <PrintReport r={result} facts={facts(submitted, printLang ?? lang)} lang={printLang ?? lang}

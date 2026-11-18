@@ -187,6 +187,18 @@ const vi = {
     gaEdd: "ngày khám",
     gaIvf: "ngày khám − ngày chuyển phôi",
     infoSource: "Nguồn: hướng dẫn của The Fetal Medicine Foundation và các bài báo trong phần Cách tính.",
+    aspirinCheck: "Trước khi kê aspirin: hỏi tiền sử dị ứng hoặc hen do aspirin/NSAID, loét dạ dày tá tràng, rối loạn đông máu; rà thuốc đang dùng (NSAID khác, heparin, thuốc chống trầm cảm SSRI/SNRI, thuốc và thực phẩm chức năng chứa salicylat).",
+    drugsTitle: "Thuốc liên quan và tương tác thuốc",
+    drugsIntro: "Tóm tắt để rà thuốc khi kê aspirin dự phòng hoặc khi điều trị tăng huyết áp thai kỳ. Không thay thế tờ hướng dẫn sử dụng, dược thư hay ý kiến dược sĩ lâm sàng.",
+    drugsTableTitle: "Tương tác cần lưu ý",
+    colCombo: "Phối hợp",
+    colEffect: "Hậu quả",
+    colManage: "Cách xử trí",
+    colLevel: "Mức",
+    level_avoid: "Tránh",
+    level_caution: "Thận trọng",
+    level_separate: "Tách giờ uống",
+    drugsSource: "Nguồn: ASPRE (Rolnik 2017; Wright 2017), STATIN (Döbert 2021), WHO về bổ sung canxi, ISSHP 2021, cảnh báo của FDA năm 2020 về NSAID, tờ hướng dẫn sử dụng của từng thuốc. Cần dược sĩ lâm sàng và bác sĩ sản khoa Vinmec duyệt trước khi dùng lâm sàng.",
     signIn: "Đăng nhập",
     signInIntro: "Dùng tài khoản Vinmec của bạn.",
     username: "Tên đăng nhập",
@@ -319,6 +331,119 @@ const vi = {
     family_history_pe: "Mẹ bị TSG: −1.7154",
     diabetes: "Đái tháo đường: −3.3899",
   } as Record<string, string>,
+
+  /** Drugs related to preeclampsia, how they touch the calculator, and interactions to check. */
+  drugs: {
+    groups: [
+      {
+        title: "Aspirin dự phòng (nhóm nguy cơ cao ở 11–13 tuần)",
+        items: [
+          "Liều 150 mg uống mỗi tối, bắt đầu từ 11–14 tuần và ngưng ở 36 tuần (thử nghiệm ASPRE, Rolnik 2017).",
+          "Giảm khoảng 90% tiền sản giật <32 tuần và 60% tiền sản giật <37 tuần; không giảm tiền sản giật đủ tháng.",
+          "Hiệu quả rõ hơn khi sản phụ uống đủ từ 90% số liều trở lên (phân tích thứ cấp ASPRE, Wright 2017): cần dặn uống đều mỗi tối.",
+          "ASPRE không nhận sản phụ dị ứng aspirin, loét dạ dày tá tràng, rối loạn đông máu hoặc đang dùng NSAID kéo dài. Các trường hợp này bác sĩ cân nhắc riêng.",
+          "Ngưng ở 36 tuần, trước thời điểm sinh và gây tê tủy sống/ngoài màng cứng.",
+        ],
+      },
+      {
+        title: "Thuốc khác liên quan đến tiền sản giật",
+        items: [
+          "Canxi: WHO khuyên 1,5–2 g canxi nguyên tố/ngày cho sản phụ có khẩu phần canxi thấp để giảm nguy cơ tiền sản giật.",
+          "Pravastatin: thử nghiệm STATIN (Döbert 2021) dùng 20 mg/ngày từ 35–37 tuần ở nhóm nguy cơ cao, không giảm tỉ lệ sinh do tiền sản giật. Không dùng ngoài nghiên cứu.",
+          "Heparin trọng lượng phân tử thấp: không phải thuốc dự phòng tiền sản giật thường quy; chỉ dùng khi có chỉ định khác như hội chứng kháng phospholipid hoặc huyết khối.",
+          "Khi đã có tăng huyết áp: thuốc thường dùng là labetalol, nifedipin, methyldopa (ISSHP 2021). Thuốc ức chế men chuyển (ACEI) và chẹn thụ thể angiotensin (ARB) gây hại cho thai, không dùng khi mang thai.",
+          "Magie sulfat: dự phòng và điều trị co giật trong tiền sản giật nặng; theo dõi phản xạ gân xương, nhịp thở, lượng nước tiểu; thuốc giải độc là calci gluconat.",
+        ],
+      },
+      {
+        title: "Thuốc và các ô nhập liệu của máy tính",
+        items: [
+          "Tăng huyết áp mạn: chọn \"Có\" nếu sản phụ bị tăng huyết áp từ trước khi mang thai, kể cả khi đang dùng thuốc hạ áp và huyết áp đo được bình thường. Ô này thay đổi cả nguy cơ tiên nghiệm và trung vị MAP kỳ vọng.",
+          "Đái tháo đường type 2: ghi đúng có hay không điều trị insulin. Hai nhóm có hệ số khác nhau khi tính trung vị MAP, UtA-PI và PlGF.",
+          "Thụ thai bằng thuốc kích trứng (clomiphen, letrozol…) được ghi nhận nhưng không làm thay đổi nguy cơ trong mô hình này; chỉ IVF có hệ số riêng.",
+          "Hút thuốc lá làm thay đổi trung vị MAP và PlGF kỳ vọng, cần khai báo đúng.",
+          "Aspirin không phải dữ liệu đầu vào. Ghi việc có dùng aspirin ở phần kết cục: aspirin làm giảm tiền sản giật sinh non, nên cần biết để đánh giá lại mô hình trên dữ liệu Vinmec.",
+        ],
+      },
+    ],
+    interactions: [
+      {
+        level: "avoid",
+        combo: "Aspirin + NSAID khác (ibuprofen, diclofenac, naproxen, meloxicam…)",
+        effect: "Tăng nguy cơ loét và chảy máu tiêu hoá; ibuprofen có thể làm giảm tác dụng chống kết tập tiểu cầu của aspirin. Từ 20 tuần, NSAID còn có thể gây thiểu ối (FDA 2020).",
+        manage: "Tránh dùng; giảm đau, hạ sốt bằng paracetamol.",
+      },
+      {
+        level: "avoid",
+        combo: "Aspirin + thuốc khác chứa salicylat (một số thuốc cảm cúm, thuốc dạ dày chứa bismuth subsalicylat)",
+        effect: "Trùng hoạt chất, cộng dồn liều salicylat.",
+        manage: "Hỏi kỹ thuốc không kê đơn; chọn sản phẩm không chứa salicylat.",
+      },
+      {
+        level: "caution",
+        combo: "Aspirin + heparin hoặc heparin trọng lượng phân tử thấp (enoxaparin)",
+        effect: "Tăng nguy cơ chảy máu.",
+        manage: "Chỉ phối hợp khi có chỉ định (ví dụ hội chứng kháng phospholipid); theo dõi chảy máu; báo bác sĩ gây mê trước gây tê tủy sống/ngoài màng cứng.",
+      },
+      {
+        level: "caution",
+        combo: "Aspirin + thuốc chống trầm cảm SSRI/SNRI (sertralin, fluoxetin, venlafaxin…)",
+        effect: "Tăng nguy cơ chảy máu, nhất là chảy máu tiêu hoá.",
+        manage: "Không tự ngưng thuốc chống trầm cảm; theo dõi dấu hiệu chảy máu.",
+      },
+      {
+        level: "caution",
+        combo: "Aspirin + corticosteroid toàn thân dùng kéo dài (prednisolon…)",
+        effect: "Tăng nguy cơ loét tiêu hoá.",
+        manage: "Theo dõi triệu chứng dạ dày; cân nhắc thuốc bảo vệ dạ dày khi dùng kéo dài.",
+      },
+      {
+        level: "caution",
+        combo: "Aspirin + thực phẩm chức năng: bạch quả (ginkgo), dầu cá liều cao, tỏi, nghệ liều cao",
+        effect: "Có thể tăng nguy cơ chảy máu (bằng chứng còn hạn chế).",
+        manage: "Hỏi và ghi lại mọi thực phẩm chức năng đang dùng.",
+      },
+      {
+        level: "caution",
+        combo: "Nifedipin + magie sulfat",
+        effect: "Cộng hợp hạ huyết áp; hiếm gặp yếu cơ do ức chế thần kinh cơ.",
+        manage: "Dùng được cùng nhau; theo dõi huyết áp, phản xạ gân xương, nhịp thở; sẵn calci gluconat.",
+      },
+      {
+        level: "caution",
+        combo: "Magie sulfat + thuốc giãn cơ hoặc aminoglycosid (gentamicin)",
+        effect: "Tăng và kéo dài ức chế thần kinh cơ.",
+        manage: "Báo bác sĩ gây mê; theo dõi nhịp thở.",
+      },
+      {
+        level: "caution",
+        combo: "Labetalol + insulin hoặc thuốc hạ đường huyết",
+        effect: "Chẹn beta có thể che lấp dấu hiệu hạ đường huyết (run, tim nhanh).",
+        manage: "Theo dõi đường huyết sát hơn.",
+      },
+      {
+        level: "avoid",
+        combo: "Nifedipin + bưởi chùm (grapefruit) hoặc nước ép",
+        effect: "Ức chế CYP3A4, tăng nồng độ nifedipin: dễ tụt huyết áp, nhức đầu, phù. Bưởi cũng có thể gây tương tác tương tự.",
+        manage: "Tránh ăn, uống bưởi chùm trong thời gian dùng nifedipin.",
+      },
+      {
+        level: "separate",
+        combo: "Methyldopa + viên sắt",
+        effect: "Sắt làm giảm hấp thu methyldopa, huyết áp có thể kiểm soát kém hơn.",
+        manage: "Uống cách nhau ít nhất 2 giờ.",
+      },
+      {
+        level: "separate",
+        combo: "Canxi + viên sắt",
+        effect: "Canxi làm giảm hấp thu sắt.",
+        manage: "Uống cách nhau vài giờ (WHO khuyên tách canxi và sắt).",
+      },
+    ],
+  } as {
+    groups: { title: string; items: string[] }[];
+    interactions: { level: "avoid" | "caution" | "separate"; combo: string; effect: string; manage: string }[];
+  },
 
   /** Screening guidance and measurement protocols. */
   info: [
