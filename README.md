@@ -22,6 +22,13 @@ Plans: [Plan and Build Draft](https://claude.ai/artifact/3V88CyXtFYyxDFsc1MkDMV)
 | 4b | Cloud deployment with app-owned accounts and automatic HTTPS | Files ready ([deploy/cloud/](deploy/cloud/README.md), in Vietnamese); needs a VM, a domain and Vinmec's data-protection approval |
 | 5 | Validation on Vinmec outcomes, recalibration if needed | Not started (needs ethics approval) |
 
+## Medication check
+
+A card under the screening guidance checks regular medicines, ward injectables (magnesium sulphate, IV
+labetalol, hydralazine…), foods and supplements against a sourced rule base, for the patient's stage and
+conditions. Severity comes from the rules, not from AI. Not yet reviewed by a pharmacist: see
+[docs/medication-safety.md](docs/medication-safety.md).
+
 ## Standalone website
 
 A separate version of the calculator that needs no server, sign-in or database. It is a single HTML
@@ -109,6 +116,8 @@ Vietnamese and English are kept apart, on screen, on paper and in the code:
   fails if a key is missing or misspelled in either file.
 - Components only look text up by key (`t(lang, "key")`, `loc(lang).info`). They contain no
   inline Vietnamese or English sentences.
+- Exception: the medication rules in `web/src/meds/kb.ts` keep Vietnamese and English side by side, so a
+  pharmacist reviews each rule once. See [docs/medication-safety.md](docs/medication-safety.md).
 - The printed report uses one language: the screen language, or the other one from the
   second print button.
 

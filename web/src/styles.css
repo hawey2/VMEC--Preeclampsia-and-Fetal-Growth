@@ -143,6 +143,10 @@ details { margin: 8px 0; font-size: 13.5px; }
   .pr__cols dt { font-size: 8pt; }
   .pr__notes { font-size: 8.5pt; color: #333; break-inside: avoid; }
   .pr__notes ul { margin: 2px 0 6px; padding-left: 16px; }
+  .pr__meds { font-size: 7.8pt; }
+  .pr__meds p { margin: 1px 0 2px; }
+  .pr__meds ul { columns: 2; column-gap: 14px; margin: 0 0 4px; }
+  .pr__meds li { break-inside: avoid; }
   .pr__sign { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin: 14px 0 6px; break-inside: avoid; }
   .pr__sign div { border-top: 1px solid #000; padding-top: 3px; font-size: 9pt; height: 34px; }
   .pr__foot { border-top: 1px solid #000; padding-top: 4px; font-size: 7.8pt; color: #333; break-inside: avoid; }
@@ -193,19 +197,22 @@ details { margin: 8px 0; font-size: 13.5px; }
 .how h3 { font-size: 14.5px; margin: 14px 0 4px; }
 .how ul { padding-left: 18px; }
 .how li { margin: 3px 0; }
-.drugs .ddi td { vertical-align: top; font-size: 13px; }
-.drugs .ddi td:nth-child(2) { min-width: 160px; }
 .ddi--avoid { background: var(--high-bg); border-color: var(--high); color: var(--high); }
 .ddi--caution { background: var(--warn-bg); border-color: var(--warn-line); color: var(--warn-ink); }
 .ddi--separate { background: var(--low-bg); border-color: var(--low); color: var(--low); }
-@media (max-width: 640px) {
-  .ddi thead { display: none; }
-  .ddi, .ddi tbody, .ddi tr, .ddi td { display: block; }
-  .ddi tr { border-bottom: 1px solid var(--line); padding: 8px 0; }
-  .drugs .ddi td { border: none; padding: 2px 0; }
-  .drugs .ddi td:nth-child(2) { min-width: 0; }
-  .ddi td[data-label]::before { content: attr(data-label) ": "; color: var(--muted); font-weight: 600; }
-}
+.ddi--info { color: var(--muted); }
+.medcheck__ctx, .medcheck__items { display: grid; gap: 10px 16px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); margin: 10px 0; }
+.medcheck fieldset { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; margin: 0; min-width: 0; }
+.medcheck legend { font-weight: 600; font-size: 13px; padding: 0 4px; }
+.medcheck label.check { display: flex; gap: 8px; align-items: flex-start; font-size: 13.5px; padding: 3px 0; }
+.medcheck h4 { font-size: 13.5px; margin: 10px 0 2px; }
+.findings { list-style: none; padding: 0; margin: 6px 0; }
+.finding { border: 1px solid var(--line); border-left-width: 4px; border-radius: 8px; padding: 8px 10px; margin: 6px 0; }
+.finding p { margin: 4px 0 0; overflow-wrap: anywhere; }
+.finding__head { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.finding--avoid { border-left-color: var(--high); }
+.finding--caution { border-left-color: var(--warn-line); }
+.finding--separate { border-left-color: var(--low); }
 .formula { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 13px; background: var(--chip-bg, rgba(127, 127, 127, 0.08)); padding: 6px 10px; border-radius: 6px; overflow-wrap: anywhere; margin: 4px 0; }
 .pr__extra { list-style: none; padding: 0; margin: 2px 0; font-size: 9pt; }
 .pr__interp { font-size: 9pt; margin: 4px 0; }

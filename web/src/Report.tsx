@@ -2,6 +2,7 @@ import { analysers, markerName, t, type Key, type Lang } from "./i18n";
 import type { AssessmentOut, Risk, ScreeningSummary } from "./types";
 import { compactWarnings, msg } from "./messages";
 import { fmtDateTime } from "./Records";
+import { MedPrintLines, type MedState } from "./MedCheck";
 
 const analyserName: Record<string, string> = Object.fromEntries(analysers);
 
@@ -141,7 +142,9 @@ export function RiskLines({ r, lang }: { r: AssessmentOut; lang: Lang }) {
 type Facts = { label: Key; value: string }[];
 
 /** One-page A4 report in a single language (the one chosen when printing). */
-export function PrintReport({ r, facts, lang, record }: { r: AssessmentOut; facts: Facts; lang: Lang; record: ScreeningSummary | null }) {
+export function PrintReport({ r, facts, lang, record, meds }: {
+  r: AssessmentOut; facts: Facts; lang: Lang; record: ScreeningSummary | null; meds: MedState;
+}) {
   const L = (k: Key) => t(lang, k);
   const head = headlineCombo(r);
   return (
@@ -208,6 +211,8 @@ export function PrintReport({ r, facts, lang, record }: { r: AssessmentOut; fact
           </ul>
         </section>
       </div>
+
+      <MedPrintLines value={meds} lang={lang} />
 
       {r.warnings.length > 0 && (
         <section className="pr__notes">

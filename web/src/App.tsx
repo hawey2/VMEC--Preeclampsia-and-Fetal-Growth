@@ -8,7 +8,7 @@ import { MomTable, PrintReport, RiskLines, RiskTable, ScreenBadge } from "./Repo
 import { Charts } from "./Charts";
 import { HowItWorks } from "./How";
 import { Info } from "./Info";
-import { Drugs } from "./Drugs";
+import { EMPTY_MEDS, MedCheck, type MedState } from "./MedCheck";
 import type { AssessmentOut, FormState, ScreeningSummary, User } from "./types";
 import { ChangePassword, Login } from "./Login";
 import { History, RecordBar } from "./Records";
@@ -70,6 +70,7 @@ export default function App() {
     }
   });
   const [f, setF] = useState<FormState>(EMPTY);
+  const [meds, setMeds] = useState<MedState>(EMPTY_MEDS);
   const [missing, setMissing] = useState<string[]>([]);
   const [result, setResult] = useState<AssessmentOut | null>(null);
   const [submitted, setSubmitted] = useState<FormState | null>(null);
@@ -312,7 +313,7 @@ export default function App() {
           <button type="button" className="primary" onClick={calculate} disabled={busy}>
             {busy ? "…" : L("calculate")}
           </button>
-          <button type="button" onClick={() => { setF({ ...EMPTY, exam_date: today() }); setResult(null); setRecord(null); setMissing([]); setError(""); }}>
+          <button type="button" onClick={() => { setF({ ...EMPTY, exam_date: today() }); setMeds(EMPTY_MEDS); setResult(null); setRecord(null); setMissing([]); setError(""); }}>
             {L("reset")}
           </button>
           {error && <p className="error" role="alert">{error}</p>}
@@ -358,10 +359,10 @@ export default function App() {
         </>
         )}
         <Info lang={lang} />
-        <Drugs lang={lang} />
+        <MedCheck lang={lang} value={meds} onChange={setMeds} />
       </div>
       {user && result && submitted && (
-        <PrintReport r={result} facts={facts(submitted, printLang ?? lang)} lang={printLang ?? lang}
+        <PrintReport r={result} facts={facts(submitted, printLang ?? lang)} lang={printLang ?? lang} meds={meds}
           record={record && !dirty ? record.summary : null} />
       )}
     </>
