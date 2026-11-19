@@ -108,6 +108,7 @@ export default function App() {
     setUser(null);
     setNotice("");
     setF({ ...EMPTY, exam_date: today() });
+    setMeds(EMPTY_MEDS);
     setResult(null);
     setRecord(null);
   };
@@ -165,6 +166,7 @@ export default function App() {
       const form = { ...EMPTY, ...(s.form_state ?? {}) } as FormState;
       firstRun.current = true; // show the stored result as saved, not a recalculation
       setF(form);
+      setMeds(EMPTY_MEDS); // the medication review is not saved with the record yet: never carry it to another one
       setRecord({ summary: s, form });
       setResult(s.result);
       setSubmitted(form);
